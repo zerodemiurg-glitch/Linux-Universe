@@ -2,7 +2,7 @@
 set -e
 
 lb config noauto \
-    --distribution "noble" \
+    --distribution "resolute" \
     --archive-areas "main restricted universe multiverse" \
     --binary-images iso \
     --architecture amd64 \
