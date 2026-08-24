@@ -7,6 +7,7 @@ lb config noauto \
     --binary-images iso-hybrid \
     --architecture amd64 \
     --linux-flavours generic \
+    --bootloaders "grub-efi" \
     --iso-application "Linux-Universe" \
     --iso-volume "Linux-Universe" \
     --iso-publisher "Linux-Universe Project" \
