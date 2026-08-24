@@ -1,6 +1,6 @@
 task-gnome-desktop
 network-manager
-firmware-linux
+linux-firmware
 sudo
 nano
 git
