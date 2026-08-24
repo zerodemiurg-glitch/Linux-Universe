@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+echo "Downloading ad-block hosts list..."
+curl -fsSL https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts -o /tmp/adblock-hosts
+
+if [ -s /tmp/adblock-hosts ]; then
+    echo "" >> /etc/hosts
+    echo "# Linux-Universe built-in ad blocker" >> /etc/hosts
+    grep '^0.0.0.0' /tmp/adblock-hosts >> /etc/hosts
+    echo "Ad-block hosts list added: $(grep -c '^0.0.0.0' /tmp/adblock-hosts) domains blocked"
+else
+    echo "WARNING: Failed to download ad-block list, skipping"
+fi
+
+rm -f /tmp/adblock-hosts
