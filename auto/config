@@ -8,6 +8,8 @@ lb config noauto \
     --architecture amd64 \
     --linux-flavours generic \
     --bootloader grub-efi \
+    --source false \
+    --memtest none \
     --iso-application "Linux-Universe" \
     --iso-volume "Linux-Universe" \
     --iso-publisher "Linux-Universe-Project" \
