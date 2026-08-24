@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+cd /boot
+
+if [ ! -e memtest86+.bin ]; then
+    for f in memtest86+x64.bin memtest86+*.bin; do
+        if [ -e "$f" ]; then
+            cp "$f" memtest86+.bin
+            echo "Copied $f to memtest86+.bin for live-build compatibility"
+            break
+        fi
+    done
+fi
