@@ -1,0 +1,42 @@
+name: Build Linux-Universe ISO
+
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - 'auto/**'
+      - 'config/**'
+      - '.github/workflows/build-iso.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install live-build and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y live-build debootstrap syslinux-utils xorriso
+
+      - name: Run live-build
+        run: |
+          sudo lb clean
+          sudo lb build 2>&1 | tee build.log
+
+      - name: Upload build log (always, for debugging)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+
+      - name: Upload ISO artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-universe-iso
+          path: '*.iso'
+          if-no-files-found: error

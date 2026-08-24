@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+lb config noauto \
+    --distribution "noble" \
+    --archive-areas "main restricted universe multiverse" \
+    --binary-images iso-hybrid \
+    --architecture amd64 \
+    --linux-flavours generic \
+    --debian-installer none \
+    --iso-application "Linux-Universe" \
+    --iso-volume "Linux-Universe" \
+    --iso-publisher "Linux-Universe Project" \
+    "${@}"
