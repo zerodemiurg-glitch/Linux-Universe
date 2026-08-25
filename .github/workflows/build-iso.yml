@@ -23,6 +23,10 @@ jobs:
           sudo apt-get remove -y genisoimage || true
           sudo apt-mark hold genisoimage || true
 
+      - name: Dump binary_iso script for inspection
+        run: |
+          cat /usr/lib/live/build/binary_iso
+
       - name: Run live-build
         run: |
           sudo lb clean
