@@ -23,7 +23,7 @@ jobs:
           sudo apt-get remove -y genisoimage || true
           sudo apt-mark hold genisoimage || true
 
-- name: Run live-build
+      - name: Run live-build
         run: |
           sudo lb clean
           sudo lb build 2>&1 | tee build.log || true
