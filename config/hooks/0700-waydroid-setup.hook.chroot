@@ -8,4 +8,16 @@ curl -fsSL https://repo.waydro.id | bash
 apt-get update
 apt-get install -y waydroid || echo "WARNING: Waydroid install failed"
 
+echo "Installing Docker..."
+curl -fsSL https://get.docker.com | bash
+systemctl enable docker
+usermod -aG docker $(getent passwd 1000 | cut -d: -f1) 2>/dev/null || true
+echo "Docker installed and enabled"
+
+echo "Installing Docker..."
+curl -fsSL https://get.docker.com | bash
+systemctl enable docker
+usermod -aG docker $(getent passwd 1000 | cut -d: -f1) 2>/dev/null || true
+echo "Docker installed and enabled"
+
 echo "Waydroid setup complete"

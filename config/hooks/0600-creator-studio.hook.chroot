@@ -18,7 +18,7 @@ flatpak install -y --noninteractive flathub org.gimp.GIMP || echo "WARNING: GIMP
 flatpak install -y --noninteractive flathub org.inkscape.Inkscape || echo "WARNING: Inkscape install failed"
 
 # E-book reader (all formats: epub, fb2, txt, pdf via companion)
-flatpak install -y --noninteractive flathub com.readest.Readest || echo "WARNING: Readest install failed"
+flatpak install -y --noninteractive flathub com.bilingify.readest || echo "WARNING: Readest install failed"
 
 # Notes app
 flatpak install -y --noninteractive flathub org.gnome.Notes || echo "WARNING: GNOME Notes install failed"
