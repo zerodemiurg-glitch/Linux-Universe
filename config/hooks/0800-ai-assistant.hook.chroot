@@ -23,19 +23,15 @@ if [ -n "$NIGHTLY_TAG" ]; then
     NIGHTLY_JSON=$(curl -fsSL -H "User-Agent: linux-universe-build" "https://api.github.com/repos/ggml-org/llama.cpp/releases/tags/${NIGHTLY_TAG}")
     echo "--- asset names in nightly release ---"
     echo "$NIGHTLY_JSON" | grep -oE '"name": ?"[^"]+"' | head -40
-    LATEST_URL=$(echo "$NIGHTLY_JSON" | grep -oE '"browser_download_url": ?"[^"]+ubuntu[^"]*x64[^"]*"' | cut -d'"' -f4 | head -1)
+    LATEST_URL=$(echo "$NIGHTLY_JSON" | grep -oE '"browser_download_url": ?"[^"]*llama-b[0-9]+-bin-ubuntu-x64\.tar\.gz"' | cut -d'"' -f4 | head -1)
 fi
 
 if [ -n "$LATEST_URL" ]; then
     echo "Found llama.cpp asset: $LATEST_URL"
-    curl -fsSL "$LATEST_URL" -o llamacpp_archive
+    curl -fsSL "$LATEST_URL" -o llamacpp.tar.gz
     mkdir -p /opt/linux-universe-ai/bin
-    if file llamacpp_archive | grep -qi zip; then
-        unzip -o llamacpp_archive -d /opt/linux-universe-ai/bin
-    else
-        tar -xzf llamacpp_archive -C /opt/linux-universe-ai/bin
-    fi
-    rm llamacpp_archive
+    tar -xzf llamacpp.tar.gz -C /opt/linux-universe-ai/bin
+    rm llamacpp.tar.gz
     echo "llama.cpp binaries downloaded"
 else
     echo "WARNING: still could not resolve llama.cpp binary asset URL"
