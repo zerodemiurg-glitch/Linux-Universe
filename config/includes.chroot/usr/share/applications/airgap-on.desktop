@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Air-Gap Mode: Enable
+Comment=Disconnect all network interfaces
+Exec=pkexec /usr/local/bin/linux-universe-airgap on
+Icon=network-offline
+Terminal=false
+Categories=System;Security;

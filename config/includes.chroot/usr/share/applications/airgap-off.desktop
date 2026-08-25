@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Air-Gap Mode: Disable
+Comment=Restore network connectivity
+Exec=pkexec /usr/local/bin/linux-universe-airgap off
+Icon=network-idle
+Terminal=false
+Categories=System;Security;

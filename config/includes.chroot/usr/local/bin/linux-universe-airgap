@@ -1,0 +1,28 @@
+#!/bin/bash
+# Linux-Universe Air-Gap Mode toggle
+
+STATE_FILE="/var/lib/linux-universe/airgap-state"
+mkdir -p /var/lib/linux-universe
+
+if [ "$1" = "on" ]; then
+    nmcli networking off
+    rfkill block all
+    echo "on" > "$STATE_FILE"
+    notify-send "Linux-Universe" "Air-Gap Mode ENABLED: all network interfaces disabled" -i network-offline 2>/dev/null
+    echo "Air-Gap Mode: ON — all networking disabled"
+elif [ "$1" = "off" ]; then
+    nmcli networking on
+    rfkill unblock all
+    echo "off" > "$STATE_FILE"
+    notify-send "Linux-Universe" "Air-Gap Mode DISABLED: networking restored" -i network-idle 2>/dev/null
+    echo "Air-Gap Mode: OFF — networking restored"
+elif [ "$1" = "status" ]; then
+    if [ -f "$STATE_FILE" ]; then
+        cat "$STATE_FILE"
+    else
+        echo "off"
+    fi
+else
+    echo "Usage: linux-universe-airgap [on|off|status]"
+    exit 1
+fi
