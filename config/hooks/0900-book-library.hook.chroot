@@ -1,0 +1,35 @@
+#!/bin/bash
+set -e
+
+echo "Setting up Linux-Universe book library (Project Gutenberg, Russian language, public domain)..."
+
+LIB_DIR="/usr/share/linux-universe/books"
+mkdir -p "$LIB_DIR"
+
+CATALOG_URL="https://www.gutenberg.org/cache/epub/feeds/pg_catalog.csv.gz"
+curl -fsSL "$CATALOG_URL" -o /tmp/pg_catalog.csv.gz || { echo "WARNING: catalog download failed"; exit 0; }
+gunzip -f /tmp/pg_catalog.csv.gz
+
+# Extract Gutenberg IDs for Russian-language books
+IDS=$(awk -F',' 'NR>1 && $6=="ru" {print $1}' /tmp/pg_catalog.csv)
+COUNT=0
+TOTAL_MAX_BYTES=$((60*1024*1024))
+CURRENT_BYTES=0
+
+for ID in $IDS; do
+    URL="https://www.gutenberg.org/ebooks/${ID}.epub.noimages"
+    OUT="$LIB_DIR/${ID}.epub"
+    curl -fsSL "$URL" -o "$OUT" 2>/dev/null || continue
+    if [ -s "$OUT" ]; then
+        SIZE=$(stat -c%s "$OUT")
+        CURRENT_BYTES=$((CURRENT_BYTES + SIZE))
+        COUNT=$((COUNT + 1))
+    else
+        rm -f "$OUT"
+    fi
+    if [ "$CURRENT_BYTES" -ge "$TOTAL_MAX_BYTES" ]; then
+        break
+    fi
+done
+
+echo "Book library setup complete: $COUNT books, $(du -sh "$LIB_DIR" | cut -f1) total"
