@@ -7,10 +7,10 @@ mkdir -p /opt/linux-universe-ai
 cd /opt/linux-universe-ai
 
 # Download latest llama.cpp prebuilt Linux x64 binary (plain CPU build, .tar.gz)
-LATEST_URL=$(curl -s https://api.github.com/repos/ggml-org/llama.cpp/releases/latest \
-    | grep "browser_download_url" \
-    | grep "bin-ubuntu-x64.tar.gz" \
-    | head -1 | cut -d '"' -f 4)
+RELEASES_JSON=$(curl -fsSL -H "User-Agent: linux-universe-build" https://api.github.com/repos/ggml-org/llama.cpp/releases/latest)
+echo "--- releases API response length: ${#RELEASES_JSON} chars ---"
+
+LATEST_URL=$(echo "$RELEASES_JSON" | grep "browser_download_url" | grep "bin-ubuntu-x64.tar.gz" | head -1 | cut -d '"' -f 4)
 
 if [ -n "$LATEST_URL" ]; then
     echo "Found llama.cpp release: $LATEST_URL"
@@ -20,7 +20,8 @@ if [ -n "$LATEST_URL" ]; then
     rm llamacpp.tar.gz
     echo "llama.cpp binaries downloaded"
 else
-    echo "WARNING: could not resolve llama.cpp release URL"
+    echo "WARNING: could not resolve llama.cpp release URL, dumping candidate asset names:"
+    echo "$RELEASES_JSON" | grep "browser_download_url" | head -20
 fi
 
 # Download quantized Qwen3-8B model (~5GB, Q4_K_M) from official Qwen repo
