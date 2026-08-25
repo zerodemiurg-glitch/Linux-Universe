@@ -1,29 +1,32 @@
 #!/bin/bash
 set -e
 
-echo "Setting up Linux-Universe AI Assistant (llama.cpp + Qwen2.5-7B)..."
+echo "Setting up Linux-Universe AI Assistant (llama.cpp + Qwen3-8B)..."
 
 mkdir -p /opt/linux-universe-ai
 cd /opt/linux-universe-ai
 
-# Download latest llama.cpp prebuilt Linux x64 binary
+# Download latest llama.cpp prebuilt Linux x64 binary (plain CPU build, .tar.gz)
 LATEST_URL=$(curl -s https://api.github.com/repos/ggml-org/llama.cpp/releases/latest \
-    | grep "browser_download_url.*ubuntu-x64.zip" | head -1 | cut -d '"' -f 4)
+    | grep "browser_download_url" \
+    | grep "bin-ubuntu-x64.tar.gz" \
+    | head -1 | cut -d '"' -f 4)
 
 if [ -n "$LATEST_URL" ]; then
-    curl -fsSL "$LATEST_URL" -o llamacpp.zip
-    unzip -o llamacpp.zip -d /opt/linux-universe-ai/bin
-    rm llamacpp.zip
+    echo "Found llama.cpp release: $LATEST_URL"
+    curl -fsSL "$LATEST_URL" -o llamacpp.tar.gz
+    mkdir -p /opt/linux-universe-ai/bin
+    tar -xzf llamacpp.tar.gz -C /opt/linux-universe-ai/bin
+    rm llamacpp.tar.gz
     echo "llama.cpp binaries downloaded"
 else
     echo "WARNING: could not resolve llama.cpp release URL"
 fi
 
-# Download quantized Qwen2.5-7B-Instruct model (~4.1GB, Q4_0)
-echo "Downloading Qwen2.5-7B-Instruct model (this is large, please wait)..."
+# Download quantized Qwen3-8B model (~5GB, Q4_K_M) from official Qwen repo
+echo "Downloading Qwen3-8B model (this is large, please wait)..."
 curl -fsSL -o model.gguf \
-    "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q4_0.gguf" \
-    || echo "WARNING: model download failed"
+    "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
 
 if [ -s model.gguf ]; then
     echo "AI model downloaded successfully: $(du -h model.gguf | cut -f1)"
