@@ -3,6 +3,7 @@ NAME="Linux-Universe"
 VERSION_ID="1.0"
 VERSION="1.0 (Cosmic Start)"
 VERSION_CODENAME=cosmic
+UBUNTU_CODENAME=resolute
 ID=linux-universe
 ID_LIKE=ubuntu
 HOME_URL="https://github.com/zerodemiurg-glitch/Linux-Universe"
