@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 echo "Installing Waydroid (Android compatibility layer)..."
 
-curl -fsSL https://repo.waydro.id | sh
+curl -fsSL https://repo.waydro.id | bash
 
 apt-get update
 apt-get install -y waydroid || echo "WARNING: Waydroid install failed"
