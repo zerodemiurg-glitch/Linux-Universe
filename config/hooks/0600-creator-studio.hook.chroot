@@ -17,4 +17,10 @@ flatpak install -y --noninteractive flathub org.gimp.GIMP || echo "WARNING: GIMP
 # Vector graphics
 flatpak install -y --noninteractive flathub org.inkscape.Inkscape || echo "WARNING: Inkscape install failed"
 
+# E-book reader (all formats: epub, fb2, txt, pdf via companion)
+flatpak install -y --noninteractive flathub com.github.johnfactotum.Foliate || echo "WARNING: Foliate install failed"
+
+# Notes app
+flatpak install -y --noninteractive flathub org.gnome.Notes || echo "WARNING: GNOME Notes install failed"
+
 echo "Creator Studio setup complete"
