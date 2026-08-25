@@ -10,3 +10,5 @@ clamav-daemon
 podman
 distrobox
 zenity
+flatpak
+gnome-software-plugin-flatpak

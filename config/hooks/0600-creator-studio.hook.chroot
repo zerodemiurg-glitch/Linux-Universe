@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+echo "Setting up Creator Studio (Flatpak apps)..."
+
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+# Video editing
+flatpak install -y --noninteractive flathub org.shotcut.Shotcut || echo "WARNING: Shotcut install failed"
+
+# Audio editing
+flatpak install -y --noninteractive flathub org.audacityteam.Audacity || echo "WARNING: Audacity install failed"
+
+# Image editing
+flatpak install -y --noninteractive flathub org.gimp.GIMP || echo "WARNING: GIMP install failed"
+
+# Vector graphics
+flatpak install -y --noninteractive flathub org.inkscape.Inkscape || echo "WARNING: Inkscape install failed"
+
+echo "Creator Studio setup complete"
