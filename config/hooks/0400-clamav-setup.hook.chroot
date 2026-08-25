@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+
+systemctl enable clamav-freshclam.service
+systemctl enable clamav-daemon.service
+
+echo "ClamAV services enabled (freshclam + daemon)"

@@ -1,0 +1,10 @@
+#!/bin/bash
+# Linux-Universe: quick ClamAV scan of home directory
+
+echo "Linux-Universe Antivirus Scan"
+echo "Scanning $HOME ..."
+clamscan -r --bell -i "$HOME" 2>/dev/null
+
+echo ""
+echo "Scan complete. Infected files (if any) are listed above."
+read -p "Press Enter to close..."

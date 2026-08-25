@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Linux-Universe Antivirus Scan
+Comment=Scan your home folder for malware
+Exec=x-terminal-emulator -e /usr/local/bin/linux-universe-scan
+Icon=security-high
+Terminal=false
+Categories=System;Security;
