@@ -6,22 +6,39 @@ echo "Setting up Linux-Universe AI Assistant (llama.cpp + Qwen3-8B)..."
 mkdir -p /opt/linux-universe-ai
 cd /opt/linux-universe-ai
 
-# Download latest llama.cpp prebuilt Linux x64 binary (plain CPU build, .tar.gz)
-RELEASES_JSON=$(curl -fsSL -H "User-Agent: linux-universe-build" https://api.github.com/repos/ggml-org/llama.cpp/releases/latest)
-echo "--- releases API response length: ${#RELEASES_JSON} chars ---"
+# The "latest" release is a semantic-version release without binaries.
+# Real prebuilt binaries live in the "nightly" release, tag looks like bNNNNN.
+LATEST_JSON=$(curl -fsSL -H "User-Agent: linux-universe-build" https://api.github.com/repos/ggml-org/llama.cpp/releases/latest)
+NIGHTLY_TAG=$(echo "$LATEST_JSON" | grep -oE '"Nightly build:\*\*[^0-9]*b[0-9]+' | grep -oE 'b[0-9]+' | head -1)
 
-LATEST_URL=$(echo "$RELEASES_JSON" | grep "browser_download_url" | grep "bin-ubuntu-x64.tar.gz" | head -1 | cut -d '"' -f 4)
+if [ -z "$NIGHTLY_TAG" ]; then
+    echo "WARNING: could not extract nightly tag from latest release body, trying releases list"
+    ALL_JSON=$(curl -fsSL -H "User-Agent: linux-universe-build" "https://api.github.com/repos/ggml-org/llama.cpp/releases?per_page=10")
+    NIGHTLY_TAG=$(echo "$ALL_JSON" | grep -oE '"tag_name": ?"b[0-9]+"' | grep -oE 'b[0-9]+' | head -1)
+fi
+
+echo "Resolved nightly tag: $NIGHTLY_TAG"
+
+if [ -n "$NIGHTLY_TAG" ]; then
+    NIGHTLY_JSON=$(curl -fsSL -H "User-Agent: linux-universe-build" "https://api.github.com/repos/ggml-org/llama.cpp/releases/tags/${NIGHTLY_TAG}")
+    echo "--- asset names in nightly release ---"
+    echo "$NIGHTLY_JSON" | grep -oE '"name": ?"[^"]+"' | head -40
+    LATEST_URL=$(echo "$NIGHTLY_JSON" | grep -oE '"browser_download_url": ?"[^"]+ubuntu[^"]*x64[^"]*"' | cut -d'"' -f4 | head -1)
+fi
 
 if [ -n "$LATEST_URL" ]; then
-    echo "Found llama.cpp release: $LATEST_URL"
-    curl -fsSL "$LATEST_URL" -o llamacpp.tar.gz
+    echo "Found llama.cpp asset: $LATEST_URL"
+    curl -fsSL "$LATEST_URL" -o llamacpp_archive
     mkdir -p /opt/linux-universe-ai/bin
-    tar -xzf llamacpp.tar.gz -C /opt/linux-universe-ai/bin
-    rm llamacpp.tar.gz
+    if file llamacpp_archive | grep -qi zip; then
+        unzip -o llamacpp_archive -d /opt/linux-universe-ai/bin
+    else
+        tar -xzf llamacpp_archive -C /opt/linux-universe-ai/bin
+    fi
+    rm llamacpp_archive
     echo "llama.cpp binaries downloaded"
 else
-    echo "WARNING: could not resolve llama.cpp release URL, dumping candidate asset names:"
-    echo "$RELEASES_JSON" | grep "browser_download_url" | head -20
+    echo "WARNING: still could not resolve llama.cpp binary asset URL"
 fi
 
 # Download quantized Qwen3-8B model (~5GB, Q4_K_M) from official Qwen repo
