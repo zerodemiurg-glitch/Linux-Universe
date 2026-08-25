@@ -23,10 +23,20 @@ jobs:
           sudo apt-get remove -y genisoimage || true
           sudo apt-mark hold genisoimage || true
 
-      - name: Run live-build
+- name: Run live-build
         run: |
           sudo lb clean
-          sudo lb build 2>&1 | tee build.log
+          sudo lb build 2>&1 | tee build.log || true
+
+      - name: Diagnose binary tree structure
+        if: always()
+        run: |
+          echo "=== binary/ directory tree (3 levels) ===" | tee -a build.log
+          find binary -maxdepth 3 2>&1 | tee -a build.log
+          echo "=== sizes ===" | tee -a build.log
+          du -sh binary/* 2>&1 | tee -a build.log
+          echo "=== EFI-related files ===" | tee -a build.log
+          find binary -iname "*efi*" -o -iname "*.disk*" 2>&1 | tee -a build.log
 
       - name: Upload build log (always, for debugging)
         if: always()

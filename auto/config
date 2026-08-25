@@ -4,7 +4,7 @@ set -e
 lb config noauto \
     --distribution "resolute" \
     --archive-areas "main restricted universe multiverse" \
-    --binary-images iso-hybrid \
+    --binary-images iso \
     --architecture amd64 \
     --linux-flavours generic \
     --bootloader grub-efi \
