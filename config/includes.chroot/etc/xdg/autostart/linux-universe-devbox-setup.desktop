@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Linux-Universe Dev-Box Setup
+Exec=/usr/local/bin/linux-universe-devbox-setup
+X-GNOME-Autostart-enabled=true
+NoDisplay=true

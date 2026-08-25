@@ -1,0 +1,68 @@
+#!/bin/bash
+# Linux-Universe Dev-Box Workspace: first-run language setup
+
+MARKER="$HOME/.config/linux-universe/devbox-setup-done"
+
+if [ -f "$MARKER" ]; then
+    exit 0
+fi
+
+LANG_CHOICE=$(zenity --list --title="Linux-Universe Dev-Box Workspace" \
+    --text="На каком языке/стеке ты программируешь?\nМожно выбрать несколько." \
+    --checklist --column="Выбрать" --column="Язык" \
+    FALSE "Python" \
+    FALSE "Node.js / JavaScript" \
+    FALSE "Go" \
+    FALSE "Rust" \
+    FALSE "Java / Kotlin" \
+    FALSE "C / C++" \
+    --separator=":" --width=400 --height=350)
+
+if [ -z "$LANG_CHOICE" ]; then
+    mkdir -p "$(dirname "$MARKER")"
+    touch "$MARKER"
+    exit 0
+fi
+
+(
+echo "10"; echo "# Настройка Dev-Box окружений..."
+
+IFS=":" read -ra LANGS <<< "$LANG_CHOICE"
+TOTAL=${#LANGS[@]}
+COUNT=0
+
+for LANG in "${LANGS[@]}"; do
+    COUNT=$((COUNT+1))
+    PCT=$((10 + COUNT * 80 / TOTAL))
+    echo "$PCT"; echo "# Разворачиваю окружение: $LANG"
+
+    case "$LANG" in
+        "Python")
+            distrobox create --name dev-python --image python:3-slim --yes
+            distrobox enter dev-python -- pip install --quiet --upgrade pip 2>/dev/null
+            ;;
+        "Node.js / JavaScript")
+            distrobox create --name dev-node --image node:lts-slim --yes
+            ;;
+        "Go")
+            distrobox create --name dev-go --image golang:latest --yes
+            ;;
+        "Rust")
+            distrobox create --name dev-rust --image rust:latest --yes
+            ;;
+        "Java / Kotlin")
+            distrobox create --name dev-java --image eclipse-temurin:latest --yes
+            ;;
+        "C / C++")
+            distrobox create --name dev-cpp --image gcc:latest --yes
+            ;;
+    esac
+done
+
+echo "100"; echo "# Готово!"
+) | zenity --progress --title="Linux-Universe Dev-Box Workspace" --text="Настройка..." --percentage=0 --auto-close --width=400
+
+mkdir -p "$(dirname "$MARKER")"
+touch "$MARKER"
+
+zenity --info --title="Linux-Universe" --text="Dev-Box Workspace готов!\nТвои окружения появились в меню приложений и терминале (distrobox enter <имя>)." --width=350

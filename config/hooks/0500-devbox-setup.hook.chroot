@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+
+echo "Dev-Box Workspace dependencies (distrobox/podman/zenity) installed via package list"
+echo "First-run language setup will trigger via autostart on user login"
