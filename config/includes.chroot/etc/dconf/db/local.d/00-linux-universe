@@ -1,0 +1,11 @@
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'
+gtk-theme='Yaru-dark'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/linux-universe/cosmic-default.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/linux-universe/cosmic-default.jpg'
+picture-options='zoom'
+
+[org/gnome/desktop/screensaver]
+picture-uri='file:///usr/share/backgrounds/linux-universe/cosmic-default.jpg'

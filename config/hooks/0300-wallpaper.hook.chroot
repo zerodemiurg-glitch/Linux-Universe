@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+mkdir -p /usr/share/backgrounds/linux-universe
+
+echo "Downloading space wallpaper..."
+curl -fsSL "https://www.nasa.gov/wp-content/uploads/2023/03/hubble-carina-nebula.jpg" -o /usr/share/backgrounds/linux-universe/cosmic-default.jpg || \
+curl -fsSL "https://images-assets.nasa.gov/image/PIA23122/PIA23122~orig.jpg" -o /usr/share/backgrounds/linux-universe/cosmic-default.jpg
+
+if [ -s /usr/share/backgrounds/linux-universe/cosmic-default.jpg ]; then
+    echo "Wallpaper downloaded successfully"
+else
+    echo "WARNING: Wallpaper download failed, using fallback"
+fi

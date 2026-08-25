@@ -1,0 +1,11 @@
+[Unit]
+Description=Linux-Universe: clear browser caches on shutdown
+DefaultDependencies=no
+Before=shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'find /home/*/.cache/mozilla /home/*/.cache/google-chrome /home/*/.cache/chromium /home/*/.cache/BraveSoftware -type f -delete 2>/dev/null; exit 0'
+
+[Install]
+WantedBy=shutdown.target
