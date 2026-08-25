@@ -9,6 +9,7 @@ lb config noauto \
     --linux-flavours generic \
     --bootloader grub-efi \
     --source false \
+    --iso-level 3 \
     --memtest none \
     --compression xz \
     --iso-application "Linux-Universe" \
