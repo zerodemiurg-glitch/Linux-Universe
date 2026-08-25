@@ -12,3 +12,5 @@ distrobox
 zenity
 flatpak
 gnome-software-plugin-flatpak
+wine
+winetricks
