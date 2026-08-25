@@ -10,6 +10,7 @@ lb config noauto \
     --bootloader grub-efi \
     --source false \
     --memtest none \
+    --compression xz \
     --iso-application "Linux-Universe" \
     --iso-volume "Linux-Universe" \
     --iso-publisher "Linux-Universe-Project" \
