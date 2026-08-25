@@ -23,9 +23,17 @@ jobs:
           sudo apt-get remove -y genisoimage || true
           sudo apt-mark hold genisoimage || true
 
-      - name: Dump binary_iso script for inspection
+      - name: Find and dump binary_iso script
         run: |
-          cat /usr/lib/live/build/binary_iso
+          find / -iname "binary_iso*" 2>/dev/null
+          echo "=== content (if found) ==="
+          FOUND=$(find / -iname "binary_iso*" -type f 2>/dev/null | head -1)
+          if [ -n "$FOUND" ]; then
+            cat "$FOUND"
+          else
+            echo "binary_iso script not found anywhere"
+            dpkg -L live-build | grep -i binary
+          fi
 
       - name: Run live-build
         run: |
