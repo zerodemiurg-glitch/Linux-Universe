@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Linux-Universe AI Assistant
+Comment=Local offline AI assistant
+Exec=x-terminal-emulator -e /usr/local/bin/linux-universe-ai
+Icon=applications-science
+Terminal=false
+Categories=Utility;

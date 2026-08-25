@@ -1,0 +1,18 @@
+#!/bin/bash
+# Linux-Universe: local offline AI assistant launcher
+
+BIN_DIR="/opt/linux-universe-ai/bin"
+MODEL="/opt/linux-universe-ai/model.gguf"
+
+MAIN_BIN=$(find "$BIN_DIR" -type f -iname "llama-cli" -o -iname "main" 2>/dev/null | head -1)
+
+if [ -z "$MAIN_BIN" ] || [ ! -f "$MODEL" ]; then
+    echo "Linux-Universe AI Assistant is not fully installed."
+    exit 1
+fi
+
+echo "Linux-Universe AI Assistant (offline, local)"
+echo "Type your message and press Enter. Ctrl+C to exit."
+echo ""
+
+"$MAIN_BIN" -m "$MODEL" --interactive-first -c 4096 -ngl 0

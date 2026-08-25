@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+
+echo "Setting up Linux-Universe AI Assistant (llama.cpp + Qwen2.5-7B)..."
+
+mkdir -p /opt/linux-universe-ai
+cd /opt/linux-universe-ai
+
+# Download latest llama.cpp prebuilt Linux x64 binary
+LATEST_URL=$(curl -s https://api.github.com/repos/ggml-org/llama.cpp/releases/latest \
+    | grep "browser_download_url.*ubuntu-x64.zip" | head -1 | cut -d '"' -f 4)
+
+if [ -n "$LATEST_URL" ]; then
+    curl -fsSL "$LATEST_URL" -o llamacpp.zip
+    unzip -o llamacpp.zip -d /opt/linux-universe-ai/bin
+    rm llamacpp.zip
+    echo "llama.cpp binaries downloaded"
+else
+    echo "WARNING: could not resolve llama.cpp release URL"
+fi
+
+# Download quantized Qwen2.5-7B-Instruct model (~4.1GB, Q4_0)
+echo "Downloading Qwen2.5-7B-Instruct model (this is large, please wait)..."
+curl -fsSL -o model.gguf \
+    "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q4_0.gguf" \
+    || echo "WARNING: model download failed"
+
+if [ -s model.gguf ]; then
+    echo "AI model downloaded successfully: $(du -h model.gguf | cut -f1)"
+else
+    echo "WARNING: model.gguf is missing or empty"
+fi
+
+echo "AI Assistant setup complete"
