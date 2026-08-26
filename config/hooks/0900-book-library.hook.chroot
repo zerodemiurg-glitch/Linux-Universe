@@ -16,14 +16,24 @@ current_bytes = 0
 count = 0
 seen = set()
 
-def api_get(params):
+def api_get(params, retries=5):
     params["format"] = "json"
     url = API + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "linux-universe-build/1.0"})
-    with urllib.request.urlopen(req, timeout=20) as r:
-        return json.loads(r.read().decode("utf-8"))
+    req = urllib.request.Request(url, headers={"User-Agent": "linux-universe-build/1.0 (contact: build@linux-universe.local)"})
+    for attempt in range(retries):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            if e.code == 429:
+                wait = 3 * (attempt + 1)
+                print(f"Rate limited, waiting {wait}s...")
+                time.sleep(wait)
+                continue
+            raise
+    return {}
 
-def get_category_members(category, limit=500):
+def get_category_members(category, limit=300):
     members = []
     cont = {}
     while len(members) < limit:
@@ -38,9 +48,14 @@ def get_category_members(category, limit=500):
         members.extend(batch)
         if "continue" in data:
             cont = data["continue"]
+            time.sleep(0.5)
         else:
             break
     return members[:limit]
+
+def chunked(lst, n):
+    for i in range(0, len(lst), n):
+        yield lst[i:i+n]
 
 categories = [
     "Проза", "Роман", "Фантастика", "Фэнтези", "Детектив",
@@ -57,35 +72,36 @@ for cat in categories:
         print(f"Category '{cat}' failed: {e}")
         continue
 
-    for m in members:
+    titles = [m.get("title") for m in members if m.get("title") and m.get("title") not in seen]
+
+    for batch in chunked(titles, 20):
         if current_bytes >= MAX_BYTES:
             break
-        title = m.get("title")
-        if not title or title in seen:
-            continue
-        seen.add(title)
+        for t in batch:
+            seen.add(t)
         try:
             data = api_get({
                 "action": "query", "prop": "extracts",
-                "explaintext": "1", "titles": title,
+                "explaintext": "1", "titles": "|".join(batch),
             })
             pages = data.get("query", {}).get("pages", {})
-            text = ""
             for _, page in pages.items():
+                title = page.get("title", "")
                 text = page.get("extract", "")
-            if not text or len(text) < 500:
-                continue
-            safe_name = "".join(c if c.isalnum() else "_" for c in title)[:80]
-            out_path = os.path.join(LIB_DIR, f"{safe_name}.txt")
-            with open(out_path, "w", encoding="utf-8") as f:
-                f.write(f"{title}\n\n{text}")
-            size = os.path.getsize(out_path)
-            current_bytes += size
-            count += 1
+                if not text or len(text) < 500:
+                    continue
+                safe_name = "".join(c if c.isalnum() else "_" for c in title)[:80]
+                out_path = os.path.join(LIB_DIR, f"{safe_name}.txt")
+                with open(out_path, "w", encoding="utf-8") as f:
+                    f.write(f"{title}\n\n{text}")
+                size = os.path.getsize(out_path)
+                current_bytes += size
+                count += 1
+                if current_bytes >= MAX_BYTES:
+                    break
         except Exception as e:
-            print(f"Text '{title}' failed: {e}")
-            continue
-        time.sleep(0.1)
+            print(f"Batch failed: {e}")
+        time.sleep(1)
 
 print(f"Downloaded {count} texts from ru.wikisource.org, {current_bytes / (1024*1024):.1f} MB total")
 PYEOF
