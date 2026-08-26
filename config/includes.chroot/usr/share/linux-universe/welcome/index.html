@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Добро пожаловать в Linux-Universe</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    background: radial-gradient(ellipse at bottom, #0d1128 0%, #050611 100%);
+    color: #e8ecff;
+    font-family: 'Ubuntu', 'Segoe UI', sans-serif;
+    overflow: hidden;
+  }
+  #stars, #stars2, #stars3 {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: transparent; z-index: 0;
+  }
+  #app {
+    position: relative; z-index: 1;
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px;
+  }
+  .slide {
+    display: none;
+    max-width: 640px;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+  }
+  .slide.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px);} to {opacity:1; transform: translateY(0);} }
+  .icon { font-size: 56px; margin-bottom: 18px; filter: drop-shadow(0 0 18px rgba(140,160,255,0.6)); }
+  h1 { font-size: 30px; margin-bottom: 14px; background: linear-gradient(90deg,#9db4ff,#c9a4ff);
+       -webkit-background-clip: text; background-clip: text; color: transparent; }
+  h2 { font-size: 24px; margin-bottom: 12px; color: #cdd6ff; }
+  p, li { font-size: 16px; line-height: 1.55; color: #b7bfe6; }
+  ul { list-style: none; text-align: left; display: inline-block; margin-top: 10px; }
+  li { margin-bottom: 8px; padding-left: 22px; position: relative; }
+  li::before { content: "✦"; position: absolute; left: 0; color: #9db4ff; }
+  #nav {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; gap: 24px;
+    margin-top: 10px; padding-bottom: 30px;
+  }
+  .dots { display: flex; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #3a3f66; transition: all .3s; }
+  .dot.active { background: #9db4ff; width: 22px; border-radius: 5px; }
+  button {
+    background: linear-gradient(90deg,#5b6bd8,#8a5bd8);
+    color: white; border: none; padding: 12px 28px;
+    border-radius: 999px; font-size: 15px; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(120,100,255,0.35);
+    transition: transform .15s;
+  }
+  button:hover { transform: translateY(-2px); }
+  button.ghost { background: transparent; color: #9aa3d1; box-shadow: none; padding: 12px 18px; }
+  #finalBtn { display: none; }
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div id="stars2"></div>
+<div id="stars3"></div>
+<div id="app">
+  <div class="slide active" data-i="0">
+    <div class="icon">🌌</div>
+    <h1>Добро пожаловать в Linux-Universe</h1>
+    <p>Полноценная операционная система на базе Ubuntu 26.04 LTS — лёгкая, приватная
+    и созданная для всех: от новичков до разработчиков и творцов.</p>
+  </div>
+  <div class="slide" data-i="1">
+    <div class="icon">🛡️</div>
+    <h2>Приватность по умолчанию</h2>
+    <ul>
+      <li>Зашифрованный DNS (DoH/DoT) — без слежки за твоими запросами</li>
+      <li>Блокировка рекламы и трекеров на уровне всей системы</li>
+      <li>Режим Air-Gap — мгновенное отключение всех сетей одной кнопкой</li>
+      <li>Автоочистка кешей браузера при выходе</li>
+    </ul>
+  </div>
+  <div class="slide" data-i="2">
+    <div class="icon">💻</div>
+    <h2>Dev-Box Workspace</h2>
+    <p>Сейчас система спросит, на каких языках ты программируешь,
+    и сама подготовит изолированные окружения — без ручной настройки.</p>
+  </div>
+  <div class="slide" data-i="3">
+    <div class="icon">🎨</div>
+    <h2>Creator Studio</h2>
+    <ul>
+      <li>Shotcut — видеомонтаж</li>
+      <li>GIMP и Krita — обработка изображений и рисование</li>
+      <li>Inkscape — векторная графика</li>
+      <li>Audacity — работа со звуком</li>
+    </ul>
+  </div>
+  <div class="slide" data-i="4">
+    <div class="icon">🔗</div>
+    <h2>Совместимость</h2>
+    <ul>
+      <li>Wine — запуск Windows-приложений</li>
+      <li>Waydroid — запуск Android-приложений</li>
+      <li>Docker — изолированные контейнеры для сложных задач</li>
+    </ul>
+  </div>
+  <div class="slide" data-i="5">
+    <div class="icon">🤖</div>
+    <h2>Локальный ИИ-помощник</h2>
+    <p>Полностью офлайн, без отправки данных куда-либо.
+    Запускается из меню приложений в любой момент.</p>
+  </div>
+  <div class="slide" data-i="6">
+    <div class="icon">🔒</div>
+    <h2>Безопасность</h2>
+    <ul>
+      <li>Антивирус-сканер (ClamAV) — проверка по запросу</li>
+      <li>Firewall (UFW) — включён по умолчанию</li>
+      <li>Timeshift — снимки системы с быстрым откатом</li>
+      <li>KeePassXC — офлайн-менеджер паролей</li>
+    </ul>
+  </div>
+  <div class="slide" data-i="7">
+    <div class="icon">📚</div>
+    <h2>Библиотека</h2>
+    <p>Встроенная коллекция книг на русском языке из общественного достояния,
+    читалка Readest и плеер аудиокниг Cozy — уже готовы к использованию.</p>
+  </div>
+  <div class="slide" data-i="8">
+    <div class="icon">🚀</div>
+    <h1>Готово к запуску</h1>
+    <p>Сейчас откроется настройка Dev-Box Workspace.
+    Спасибо, что выбрал Linux-Universe.</p>
+  </div>
+</div>
+<div id="nav">
+  <button class="ghost" id="skipBtn" onclick="closeApp()">Пропустить</button>
+  <div class="dots" id="dots"></div>
+  <button id="nextBtn" onclick="next()">Далее</button>
+  <button id="finalBtn" onclick="closeApp()">Начать</button>
+</div>
+<script>
+  const total = document.querySelectorAll('.slide').length;
+  let i = 0;
+  const dotsEl = document.getElementById('dots');
+  for (let d = 0; d < total; d++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (d === 0 ? ' active' : '');
+    dotsEl.appendChild(dot);
+  }
+  function render() {
+    document.querySelectorAll('.slide').forEach(s => {
+      s.classList.toggle('active', Number(s.dataset.i) === i);
+    });
+    document.querySelectorAll('.dot').forEach((d, idx) => {
+      d.classList.toggle('active', idx === i);
+    });
+    const isLast = i === total - 1;
+    document.getElementById('nextBtn').style.display = isLast ? 'none' : 'inline-block';
+    document.getElementById('finalBtn').style.display = isLast ? 'inline-block' : 'none';
+    document.getElementById('skipBtn').style.display = isLast ? 'none' : 'inline-block';
+  }
+  function next() { if (i < total - 1) { i++; render(); } }
+  function closeApp() {
+    fetch('http://127.0.0.1:8743/done').catch(()=>{});
+    setTimeout(()=>{ try{window.close();}catch(e){} }, 300);
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') next(); });
+  function makeStars(id, count, size, opacity) {
+    let shadow = [];
+    for (let k = 0; k < count; k++) {
+      const x = Math.floor(Math.random() * 100);
+      const y = Math.floor(Math.random() * 100);
+      shadow.push(`${x}vw ${y}vh 0 rgba(255,255,255,${opacity})`);
+    }
+    document.getElementById(id).style.boxShadow = shadow.join(',');
+    document.getElementById(id).style.width = size + 'px';
+    document.getElementById(id).style.height = size + 'px';
+  }
+  makeStars('stars', 120, 1, 0.9);
+  makeStars('stars2', 60, 2, 0.7);
+  makeStars('stars3', 30, 3, 0.5);
+  render();
+</script>
+</body>
+</html>

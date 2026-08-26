@@ -1,0 +1,32 @@
+#!/bin/bash
+
+MARKER="$HOME/.config/linux-universe/welcome-shown"
+mkdir -p "$(dirname "$MARKER")"
+
+if [ ! -f "$MARKER" ]; then
+    python3 -c "
+import http.server, socketserver
+class H(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        raise KeyboardInterrupt
+    def log_message(self, *a): pass
+with socketserver.TCPServer(('127.0.0.1', 8743), H) as httpd:
+    try:
+        httpd.handle_request()
+    except KeyboardInterrupt:
+        pass
+" &
+    SERVER_PID=$!
+
+    epiphany --application-mode --profile="$HOME/.cache/lu-welcome-profile" "file:///usr/share/linux-universe/welcome/index.html" &
+    EPIPH_PID=$!
+
+    wait $SERVER_PID
+    pkill -f "lu-welcome-profile" 2>/dev/null || true
+
+    touch "$MARKER"
+fi
+
+/usr/local/bin/linux-universe-devbox-setup

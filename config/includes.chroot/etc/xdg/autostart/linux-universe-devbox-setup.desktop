@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=Linux-Universe Dev-Box Setup
-Exec=/usr/local/bin/linux-universe-devbox-setup
+Name=Linux-Universe First Run
+Exec=/usr/local/bin/linux-universe-welcome
 X-GNOME-Autostart-enabled=true
 NoDisplay=true
