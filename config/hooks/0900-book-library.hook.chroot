@@ -1,65 +1,90 @@
 #!/bin/bash
 set -e
 
-echo "Setting up Linux-Universe book library (Project Gutenberg, Russian language, public domain)..."
+echo "Setting up Linux-Universe book library (ru.wikisource.org, public domain / CC BY-SA)..."
 
 LIB_DIR="/usr/share/linux-universe/books"
 mkdir -p "$LIB_DIR"
 
-CATALOG_URL="https://www.gutenberg.org/cache/epub/feeds/pg_catalog.csv.gz"
-curl -fsSL "$CATALOG_URL" -o /tmp/pg_catalog.csv.gz || { echo "WARNING: catalog download failed"; exit 0; }
-gunzip -f /tmp/pg_catalog.csv.gz
-
 python3 << 'PYEOF'
-import csv, urllib.request, os
+import urllib.request, urllib.parse, json, os, time
 
 LIB_DIR = "/usr/share/linux-universe/books"
-MAX_BYTES = 60 * 1024 * 1024
+API = "https://ru.wikisource.org/w/api.php"
+MAX_BYTES = 58 * 1024 * 1024
 current_bytes = 0
 count = 0
-ru_total = 0
-fail_count = 0
+seen = set()
 
-with open("/tmp/pg_catalog.csv", newline='', encoding='utf-8', errors='ignore') as f:
-    reader = csv.DictReader(f)
-    for row in reader:
-        if row.get("Language") != "ru":
-            continue
-        ru_total += 1
-        book_id = row.get("Text#")
-        if not book_id:
-            continue
+def api_get(params):
+    params["format"] = "json"
+    url = API + "?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"User-Agent": "linux-universe-build/1.0"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return json.loads(r.read().decode("utf-8"))
 
-        out_path = os.path.join(LIB_DIR, f"{book_id}.epub")
-        urls_to_try = [
-            f"https://www.gutenberg.org/ebooks/{book_id}.epub.noimages",
-            f"https://www.gutenberg.org/ebooks/{book_id}.epub3.images",
-        ]
-        downloaded = False
-        for url in urls_to_try:
-            try:
-                urllib.request.urlretrieve(url, out_path)
-                size = os.path.getsize(out_path)
-                if size > 1000:
-                    current_bytes += size
-                    count += 1
-                    downloaded = True
-                    break
-                else:
-                    os.remove(out_path)
-            except Exception:
-                if os.path.exists(out_path):
-                    os.remove(out_path)
-                continue
+def get_category_members(category, limit=500):
+    members = []
+    cont = {}
+    while len(members) < limit:
+        params = {
+            "action": "query", "list": "categorymembers",
+            "cmtitle": f"Категория:{category}", "cmlimit": "500",
+            "cmnamespace": "0",
+        }
+        params.update(cont)
+        data = api_get(params)
+        batch = data.get("query", {}).get("categorymembers", [])
+        members.extend(batch)
+        if "continue" in data:
+            cont = data["continue"]
+        else:
+            break
+    return members[:limit]
 
-        if not downloaded:
-            fail_count += 1
+categories = [
+    "Проза", "Поэзия", "Рассказ", "Роман", "Повесть",
+    "Литература_XIX_века", "Литература_XX_века",
+]
 
+for cat in categories:
+    if current_bytes >= MAX_BYTES:
+        break
+    try:
+        members = get_category_members(cat, limit=300)
+    except Exception:
+        continue
+
+    for m in members:
         if current_bytes >= MAX_BYTES:
             break
+        title = m.get("title")
+        if not title or title in seen:
+            continue
+        seen.add(title)
+        try:
+            data = api_get({
+                "action": "query", "prop": "extracts",
+                "explaintext": "1", "titles": title,
+            })
+            pages = data.get("query", {}).get("pages", {})
+            text = ""
+            for _, page in pages.items():
+                text = page.get("extract", "")
+            if not text or len(text) < 500:
+                continue
+            safe_name = "".join(c if c.isalnum() else "_" for c in title)[:80]
+            out_path = os.path.join(LIB_DIR, f"{safe_name}.txt")
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(f"{title}\n\n{text}")
+            size = os.path.getsize(out_path)
+            current_bytes += size
+            count += 1
+        except Exception:
+            continue
+        time.sleep(0.1)
 
-print(f"Russian-language entries found in catalog: {ru_total}")
-print(f"Downloaded {count} books, {current_bytes / (1024*1024):.1f} MB total, {fail_count} failed")
+print(f"Downloaded {count} texts from ru.wikisource.org, {current_bytes / (1024*1024):.1f} MB total")
 PYEOF
 
 echo "Book library setup complete"
