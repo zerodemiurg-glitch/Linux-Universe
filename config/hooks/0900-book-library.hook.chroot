@@ -53,10 +53,6 @@ def get_category_members(category, limit=300):
             break
     return members[:limit]
 
-def chunked(lst, n):
-    for i in range(0, len(lst), n):
-        yield lst[i:i+n]
-
 categories = [
     "Проза", "Роман", "Фантастика", "Фэнтези", "Детектив",
     "Поэзия", "Рассказ", "Повесть",
@@ -72,36 +68,35 @@ for cat in categories:
         print(f"Category '{cat}' failed: {e}")
         continue
 
-    titles = [m.get("title") for m in members if m.get("title") and m.get("title") not in seen]
-
-    for batch in chunked(titles, 20):
+    for m in members:
         if current_bytes >= MAX_BYTES:
             break
-        for t in batch:
-            seen.add(t)
+        title = m.get("title")
+        if not title or title in seen:
+            continue
+        seen.add(title)
         try:
             data = api_get({
                 "action": "query", "prop": "extracts",
-                "explaintext": "1", "exlimit": "20", "titles": "|".join(batch),
+                "explaintext": "1", "titles": title,
             })
             pages = data.get("query", {}).get("pages", {})
+            text = ""
             for _, page in pages.items():
-                title = page.get("title", "")
                 text = page.get("extract", "")
-                if not text or len(text) < 500:
-                    continue
-                safe_name = "".join(c if c.isalnum() else "_" for c in title)[:80]
-                out_path = os.path.join(LIB_DIR, f"{safe_name}.txt")
-                with open(out_path, "w", encoding="utf-8") as f:
-                    f.write(f"{title}\n\n{text}")
-                size = os.path.getsize(out_path)
-                current_bytes += size
-                count += 1
-                if current_bytes >= MAX_BYTES:
-                    break
+            if not text or len(text) < 500:
+                continue
+            safe_name = "".join(c if c.isalnum() else "_" for c in title)[:80]
+            out_path = os.path.join(LIB_DIR, f"{safe_name}.txt")
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(f"{title}\n\n{text}")
+            size = os.path.getsize(out_path)
+            current_bytes += size
+            count += 1
         except Exception as e:
-            print(f"Batch failed: {e}")
-        time.sleep(1)
+            print(f"Text '{title}' failed: {e}")
+            continue
+        time.sleep(0.35)
 
 print(f"Downloaded {count} texts from ru.wikisource.org, {current_bytes / (1024*1024):.1f} MB total")
 PYEOF
