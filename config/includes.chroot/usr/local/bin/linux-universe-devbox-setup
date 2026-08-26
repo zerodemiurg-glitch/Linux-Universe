@@ -1,5 +1,5 @@
 #!/bin/bash
-# Linux-Universe Dev-Box Workspace: first-run language setup
+# Linux-Universe Dev-Box Workspace: first-run language setup (minimal footprint)
 
 MARKER="$HOME/.config/linux-universe/devbox-setup-done"
 
@@ -8,7 +8,7 @@ if [ -f "$MARKER" ]; then
 fi
 
 LANG_CHOICE=$(zenity --list --title="Linux-Universe Dev-Box Workspace" \
-    --text="На каком языке/стеке ты программируешь?\nМожно выбрать несколько." \
+    --text="На каком языке/стеке ты программируешь?\nМожно выбрать несколько.\n(Минимальные окружения, без лишнего)" \
     --checklist --column="Выбрать" --column="Язык" \
     FALSE "Python" \
     FALSE "Node.js / JavaScript" \
@@ -16,7 +16,7 @@ LANG_CHOICE=$(zenity --list --title="Linux-Universe Dev-Box Workspace" \
     FALSE "Rust" \
     FALSE "Java / Kotlin" \
     FALSE "C / C++" \
-    --separator=":" --width=400 --height=350)
+    --separator=":" --width=420 --height=350)
 
 if [ -z "$LANG_CHOICE" ]; then
     mkdir -p "$(dirname "$MARKER")"
@@ -25,7 +25,7 @@ if [ -z "$LANG_CHOICE" ]; then
 fi
 
 (
-echo "10"; echo "# Настройка Dev-Box окружений..."
+echo "5"; echo "# Настройка Dev-Box окружений (минимальные)..."
 
 IFS=":" read -ra LANGS <<< "$LANG_CHOICE"
 TOTAL=${#LANGS[@]}
@@ -33,36 +33,42 @@ COUNT=0
 
 for LANG in "${LANGS[@]}"; do
     COUNT=$((COUNT+1))
-    PCT=$((10 + COUNT * 80 / TOTAL))
-    echo "$PCT"; echo "# Разворачиваю окружение: $LANG"
+    PCT=$((5 + COUNT * 90 / TOTAL))
+    echo "$PCT"; echo "# Разворачиваю минимальное окружение: $LANG"
 
     case "$LANG" in
         "Python")
-            distrobox create --name dev-python --image python:3-slim --yes
-            distrobox enter dev-python -- pip install --quiet --upgrade pip 2>/dev/null
+            NAME="dev-python"; PKGS="python3 python3-pip python3-venv"
             ;;
         "Node.js / JavaScript")
-            distrobox create --name dev-node --image node:lts-slim --yes
+            NAME="dev-node"; PKGS="nodejs npm"
             ;;
         "Go")
-            distrobox create --name dev-go --image golang:latest --yes
+            NAME="dev-go"; PKGS="golang-go"
             ;;
         "Rust")
-            distrobox create --name dev-rust --image rust:latest --yes
+            NAME="dev-rust"; PKGS="rustc cargo"
             ;;
         "Java / Kotlin")
-            distrobox create --name dev-java --image eclipse-temurin:latest --yes
+            NAME="dev-java"; PKGS="default-jdk"
             ;;
         "C / C++")
-            distrobox create --name dev-cpp --image gcc:latest --yes
+            NAME="dev-cpp"; PKGS="build-essential gdb"
+            ;;
+        *)
+            continue
             ;;
     esac
+
+    distrobox create --name "$NAME" --image debian:stable-slim --yes
+    distrobox enter "$NAME" -- sudo apt-get update
+    distrobox enter "$NAME" -- sudo apt-get install -y --no-install-recommends $PKGS
 done
 
 echo "100"; echo "# Готово!"
-) | zenity --progress --title="Linux-Universe Dev-Box Workspace" --text="Настройка..." --percentage=0 --auto-close --width=400
+) | zenity --progress --title="Linux-Universe Dev-Box Workspace" --text="Настройка..." --percentage=0 --auto-close --width=420
 
 mkdir -p "$(dirname "$MARKER")"
 touch "$MARKER"
 
-zenity --info --title="Linux-Universe" --text="Dev-Box Workspace готов!\nТвои окружения появились в меню приложений и терминале (distrobox enter <имя>)." --width=350
+zenity --info --title="Linux-Universe" --text="Dev-Box Workspace готов!\nЛёгкие окружения без лишнего мусора — только то, что реально нужно.\nОткрывай: distrobox enter <имя>" --width=350
