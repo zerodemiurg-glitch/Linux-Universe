@@ -7,10 +7,12 @@ LIB_DIR="/usr/share/linux-universe/books"
 mkdir -p "$LIB_DIR"
 
 python3 << 'PYEOF'
-import urllib.request, urllib.parse, json, os, time
+import urllib.request, urllib.parse, json, os, time, re
+import xml.etree.ElementTree as ET
 
 LIB_DIR = "/usr/share/linux-universe/books"
 API = "https://ru.wikisource.org/w/api.php"
+EXPORT_URL = "https://ru.wikisource.org/wiki/Special:Export"
 MAX_BYTES = 58 * 1024 * 1024
 current_bytes = 0
 count = 0
@@ -26,9 +28,7 @@ def api_get(params, retries=5):
                 return json.loads(r.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             if e.code == 429:
-                wait = 3 * (attempt + 1)
-                print(f"Rate limited, waiting {wait}s...")
-                time.sleep(wait)
+                time.sleep(3 * (attempt + 1))
                 continue
             raise
     return {}
@@ -53,50 +53,83 @@ def get_category_members(category, limit=300):
             break
     return members[:limit]
 
+def strip_wikitext(text):
+    text = re.sub(r'\{\{.*?\}\}', '', text, flags=re.DOTALL)
+    text = re.sub(r'\[\[[^\]|]*\|', '', text)
+    text = text.replace('[[', '').replace(']]', '')
+    text = re.sub(r"'''?", '', text)
+    text = re.sub(r'<[^>]+>', '', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
+
+def export_batch(titles):
+    data = urllib.parse.urlencode({"pages": "\n".join(titles), "curonly": "1"}).encode()
+    req = urllib.request.Request(EXPORT_URL, data=data, headers={"User-Agent": "linux-universe-build/1.0"})
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return r.read()
+        except urllib.error.HTTPError as e:
+            if e.code == 429:
+                time.sleep(5 * (attempt + 1))
+                continue
+            raise
+    return b""
+
 categories = [
     "Проза", "Роман", "Фантастика", "Фэнтези", "Детектив",
     "Поэзия", "Рассказ", "Повесть",
 ]
 
+all_titles = []
 for cat in categories:
-    if current_bytes >= MAX_BYTES:
-        break
     try:
         members = get_category_members(cat, limit=300)
         print(f"Category '{cat}': found {len(members)} pages")
     except Exception as e:
         print(f"Category '{cat}' failed: {e}")
         continue
-
     for m in members:
-        if current_bytes >= MAX_BYTES:
-            break
-        title = m.get("title")
-        if not title or title in seen:
-            continue
-        seen.add(title)
-        try:
-            data = api_get({
-                "action": "query", "prop": "extracts",
-                "explaintext": "1", "titles": title,
-            })
-            pages = data.get("query", {}).get("pages", {})
-            text = ""
-            for _, page in pages.items():
-                text = page.get("extract", "")
-            if not text or len(text) < 500:
+        t = m.get("title")
+        if t and t not in seen:
+            seen.add(t)
+            all_titles.append(t)
+
+print(f"Total unique titles to export: {len(all_titles)}")
+
+NS = "{http://www.mediawiki.org/xml/export-0.11/}"
+
+for i in range(0, len(all_titles), 50):
+    if current_bytes >= MAX_BYTES:
+        break
+    chunk = all_titles[i:i+50]
+    try:
+        xml_bytes = export_batch(chunk)
+        root = ET.fromstring(xml_bytes)
+        for page in root.findall(f"{NS}page"):
+            title_el = page.find(f"{NS}title")
+            rev = page.find(f"{NS}revision")
+            if rev is None or title_el is None:
                 continue
+            text_el = rev.find(f"{NS}text")
+            if text_el is None or not text_el.text:
+                continue
+            raw = strip_wikitext(text_el.text)
+            if len(raw) < 500:
+                continue
+            title = title_el.text
             safe_name = "".join(c if c.isalnum() else "_" for c in title)[:80]
             out_path = os.path.join(LIB_DIR, f"{safe_name}.txt")
             with open(out_path, "w", encoding="utf-8") as f:
-                f.write(f"{title}\n\n{text}")
+                f.write(f"{title}\n\n{raw}")
             size = os.path.getsize(out_path)
             current_bytes += size
             count += 1
-        except Exception as e:
-            print(f"Text '{title}' failed: {e}")
-            continue
-        time.sleep(0.35)
+            if current_bytes >= MAX_BYTES:
+                break
+    except Exception as e:
+        print(f"Export batch failed: {e}")
+    time.sleep(1)
 
 print(f"Downloaded {count} texts from ru.wikisource.org, {current_bytes / (1024*1024):.1f} MB total")
 PYEOF
