@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-echo "Dev-Box Workspace: building offline container images..."
+echo "Dev-Box Workspace: building offline container images (host-side)..."
 
-IMG_DIR="/usr/share/linux-universe/devbox-images"
+IMG_DIR="chroot/usr/share/linux-universe/devbox-images"
 mkdir -p "$IMG_DIR"
 WORKDIR=$(mktemp -d)
 
@@ -16,8 +16,8 @@ build_image() {
 FROM debian:stable-slim
 RUN apt-get update && apt-get install -y --no-install-recommends $packages && rm -rf /var/lib/apt/lists/*
 CFEOF
-    if podman build --storage-driver vfs -t "local/dev-$name" "$WORKDIR/$name" 2>&1; then
-        podman --storage-driver vfs save -o "$IMG_DIR/$name.tar" "local/dev-$name"
+    if podman build -t "local/dev-$name" "$WORKDIR/$name" 2>&1; then
+        podman save -o "$IMG_DIR/$name.tar" "local/dev-$name"
         echo "Image $name saved: $(du -h "$IMG_DIR/$name.tar" | cut -f1)"
     else
         echo "WARNING: failed to build image for $name"
