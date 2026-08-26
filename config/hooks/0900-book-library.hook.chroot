@@ -43,8 +43,8 @@ def get_category_members(category, limit=500):
     return members[:limit]
 
 categories = [
-    "Проза", "Поэзия", "Рассказ", "Роман", "Повесть",
-    "Литература_XIX_века", "Литература_XX_века",
+    "Проза", "Роман", "Фантастика", "Фэнтези", "Детектив",
+    "Поэзия", "Рассказ", "Повесть",
 ]
 
 for cat in categories:
@@ -52,7 +52,9 @@ for cat in categories:
         break
     try:
         members = get_category_members(cat, limit=300)
-    except Exception:
+        print(f"Category '{cat}': found {len(members)} pages")
+    except Exception as e:
+        print(f"Category '{cat}' failed: {e}")
         continue
 
     for m in members:
@@ -80,7 +82,8 @@ for cat in categories:
             size = os.path.getsize(out_path)
             current_bytes += size
             count += 1
-        except Exception:
+        except Exception as e:
+            print(f"Text '{title}' failed: {e}")
             continue
         time.sleep(0.1)
 
