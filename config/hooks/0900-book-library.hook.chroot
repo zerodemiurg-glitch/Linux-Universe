@@ -82,7 +82,7 @@ for cat in categories:
         try:
             data = api_get({
                 "action": "query", "prop": "extracts",
-                "explaintext": "1", "titles": "|".join(batch),
+                "explaintext": "1", "exlimit": "20", "titles": "|".join(batch),
             })
             pages = data.get("query", {}).get("pages", {})
             for _, page in pages.items():
