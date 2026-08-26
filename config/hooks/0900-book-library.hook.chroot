@@ -17,33 +17,49 @@ LIB_DIR = "/usr/share/linux-universe/books"
 MAX_BYTES = 60 * 1024 * 1024
 current_bytes = 0
 count = 0
+ru_total = 0
+fail_count = 0
 
 with open("/tmp/pg_catalog.csv", newline='', encoding='utf-8', errors='ignore') as f:
     reader = csv.DictReader(f)
     for row in reader:
         if row.get("Language") != "ru":
             continue
+        ru_total += 1
         book_id = row.get("Text#")
         if not book_id:
             continue
-        url = f"https://www.gutenberg.org/ebooks/{book_id}.epub.noimages"
+
         out_path = os.path.join(LIB_DIR, f"{book_id}.epub")
-        try:
-            urllib.request.urlretrieve(url, out_path)
-            size = os.path.getsize(out_path)
-            if size > 0:
-                current_bytes += size
-                count += 1
-            else:
-                os.remove(out_path)
-        except Exception:
-            if os.path.exists(out_path):
-                os.remove(out_path)
-            continue
+        urls_to_try = [
+            f"https://www.gutenberg.org/ebooks/{book_id}.epub.noimages",
+            f"https://www.gutenberg.org/ebooks/{book_id}.epub3.images",
+        ]
+        downloaded = False
+        for url in urls_to_try:
+            try:
+                urllib.request.urlretrieve(url, out_path)
+                size = os.path.getsize(out_path)
+                if size > 1000:
+                    current_bytes += size
+                    count += 1
+                    downloaded = True
+                    break
+                else:
+                    os.remove(out_path)
+            except Exception:
+                if os.path.exists(out_path):
+                    os.remove(out_path)
+                continue
+
+        if not downloaded:
+            fail_count += 1
+
         if current_bytes >= MAX_BYTES:
             break
 
-print(f"Downloaded {count} books, {current_bytes / (1024*1024):.1f} MB total")
+print(f"Russian-language entries found in catalog: {ru_total}")
+print(f"Downloaded {count} books, {current_bytes / (1024*1024):.1f} MB total, {fail_count} failed")
 PYEOF
 
 echo "Book library setup complete"
