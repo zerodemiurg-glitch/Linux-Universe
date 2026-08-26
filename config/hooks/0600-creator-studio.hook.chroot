@@ -23,4 +23,7 @@ flatpak install -y --noninteractive flathub com.bilingify.readest || echo "WARNI
 # Notes app
 flatpak install -y --noninteractive flathub org.gnome.Notes || echo "WARNING: GNOME Notes install failed"
 
+# Audiobook player
+flatpak install -y --noninteractive flathub com.github.geigi.cozy || echo "WARNING: Cozy install failed"
+
 echo "Creator Studio setup complete"
