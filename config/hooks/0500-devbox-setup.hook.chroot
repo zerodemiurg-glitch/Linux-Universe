@@ -1,5 +1,36 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
-echo "Dev-Box Workspace dependencies (distrobox/podman/zenity) installed via package list"
-echo "First-run language setup will trigger via autostart on user login"
+echo "Dev-Box Workspace: building offline container images..."
+
+IMG_DIR="/usr/share/linux-universe/devbox-images"
+mkdir -p "$IMG_DIR"
+WORKDIR=$(mktemp -d)
+
+build_image() {
+    local name="$1"
+    local packages="$2"
+    echo "Building image: $name"
+    mkdir -p "$WORKDIR/$name"
+    cat > "$WORKDIR/$name/Containerfile" << CFEOF
+FROM debian:stable-slim
+RUN apt-get update && apt-get install -y --no-install-recommends $packages && rm -rf /var/lib/apt/lists/*
+CFEOF
+    if podman build --storage-driver vfs -t "local/dev-$name" "$WORKDIR/$name" 2>&1; then
+        podman --storage-driver vfs save -o "$IMG_DIR/$name.tar" "local/dev-$name"
+        echo "Image $name saved: $(du -h "$IMG_DIR/$name.tar" | cut -f1)"
+    else
+        echo "WARNING: failed to build image for $name"
+    fi
+}
+
+build_image "python" "python3 python3-pip python3-venv"
+build_image "node"   "nodejs npm"
+build_image "go"     "golang-go"
+build_image "rust"   "rustc cargo"
+build_image "java"   "default-jdk"
+build_image "cpp"    "build-essential gdb"
+
+rm -rf "$WORKDIR"
+
+echo "Dev-Box offline images setup complete: $(ls -la "$IMG_DIR" | wc -l) files"

@@ -31,3 +31,12 @@ libreoffice
 thunderbird
 rhythmbox
 gnome-shell-extension-manager
+python3-venv
+build-essential
+gdb
+golang-go
+rustc
+cargo
+default-jdk
+nodejs
+npm

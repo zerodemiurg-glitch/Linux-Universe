@@ -1,5 +1,5 @@
 #!/bin/bash
-# Linux-Universe Dev-Box Workspace: first-run language setup (minimal footprint)
+# Linux-Universe Dev-Box Workspace: first-run language setup (offline, prebuilt images)
 
 MARKER="$HOME/.config/linux-universe/devbox-setup-done"
 
@@ -8,7 +8,7 @@ if [ -f "$MARKER" ]; then
 fi
 
 LANG_CHOICE=$(zenity --list --title="Linux-Universe Dev-Box Workspace" \
-    --text="На каком языке/стеке ты программируешь?\nМожно выбрать несколько.\n(Минимальные окружения, без лишнего)" \
+    --text="На каком языке/стеке ты программируешь?\nМожно выбрать несколько.\n(Уже встроено в систему, интернет не нужен)" \
     --checklist --column="Выбрать" --column="Язык" \
     FALSE "Python" \
     FALSE "Node.js / JavaScript" \
@@ -24,8 +24,10 @@ if [ -z "$LANG_CHOICE" ]; then
     exit 0
 fi
 
+IMG_DIR="/usr/share/linux-universe/devbox-images"
+
 (
-echo "5"; echo "# Настройка Dev-Box окружений (минимальные)..."
+echo "5"; echo "# Разворачиваю Dev-Box окружения (офлайн)..."
 
 IFS=":" read -ra LANGS <<< "$LANG_CHOICE"
 TOTAL=${#LANGS[@]}
@@ -34,35 +36,22 @@ COUNT=0
 for LANG in "${LANGS[@]}"; do
     COUNT=$((COUNT+1))
     PCT=$((5 + COUNT * 90 / TOTAL))
-    echo "$PCT"; echo "# Разворачиваю минимальное окружение: $LANG"
+    echo "$PCT"; echo "# Загружаю окружение: $LANG"
 
     case "$LANG" in
-        "Python")
-            NAME="dev-python"; PKGS="python3 python3-pip python3-venv"
-            ;;
-        "Node.js / JavaScript")
-            NAME="dev-node"; PKGS="nodejs npm"
-            ;;
-        "Go")
-            NAME="dev-go"; PKGS="golang-go"
-            ;;
-        "Rust")
-            NAME="dev-rust"; PKGS="rustc cargo"
-            ;;
-        "Java / Kotlin")
-            NAME="dev-java"; PKGS="default-jdk"
-            ;;
-        "C / C++")
-            NAME="dev-cpp"; PKGS="build-essential gdb"
-            ;;
-        *)
-            continue
-            ;;
+        "Python")             KEY="python"; NAME="dev-python" ;;
+        "Node.js / JavaScript") KEY="node";   NAME="dev-node" ;;
+        "Go")                 KEY="go";     NAME="dev-go" ;;
+        "Rust")                KEY="rust";   NAME="dev-rust" ;;
+        "Java / Kotlin")       KEY="java";   NAME="dev-java" ;;
+        "C / C++")             KEY="cpp";    NAME="dev-cpp" ;;
+        *) continue ;;
     esac
 
-    distrobox create --name "$NAME" --image debian:stable-slim --yes
-    distrobox enter "$NAME" -- sudo apt-get update
-    distrobox enter "$NAME" -- sudo apt-get install -y --no-install-recommends $PKGS
+    if [ -f "$IMG_DIR/$KEY.tar" ]; then
+        podman load -i "$IMG_DIR/$KEY.tar"
+        distrobox create --name "$NAME" --image "local/dev-$KEY" --yes
+    fi
 done
 
 echo "100"; echo "# Готово!"
@@ -71,4 +60,4 @@ echo "100"; echo "# Готово!"
 mkdir -p "$(dirname "$MARKER")"
 touch "$MARKER"
 
-zenity --info --title="Linux-Universe" --text="Dev-Box Workspace готов!\nЛёгкие окружения без лишнего мусора — только то, что реально нужно.\nОткрывай: distrobox enter <имя>" --width=350
+zenity --info --title="Linux-Universe" --text="Dev-Box Workspace готов!\nОкружения загружены без интернета.\nОткрывай: distrobox enter <имя>" --width=350
