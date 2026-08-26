@@ -1,0 +1,6 @@
+#!/bin/bash
+/usr/local/bin/linux-universe-control-center-server &
+SERVER_PID=$!
+sleep 0.5
+epiphany --application-mode --profile="$HOME/.cache/lu-cc-profile" "http://127.0.0.1:8744/"
+kill $SERVER_PID 2>/dev/null || true

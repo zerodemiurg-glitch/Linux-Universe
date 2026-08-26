@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Linux-Universe Control Center
+Comment=Центр управления системой
+Exec=/usr/local/bin/linux-universe-control-center
+Icon=preferences-system
+Terminal=false
+Categories=System;Settings;

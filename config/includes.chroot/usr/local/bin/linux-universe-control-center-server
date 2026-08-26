@@ -1,0 +1,209 @@
+#!/usr/bin/env python3
+"""Linux-Universe Control Center: local web UI + backend actions."""
+
+import http.server
+import socketserver
+import subprocess
+import json
+import os
+
+PORT = 8744
+
+INDEX_HTML = """<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Linux-Universe Control Center</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    min-height: 100%;
+    background: radial-gradient(ellipse at bottom, #0d1128 0%, #050611 100%);
+    color: #e8ecff;
+    font-family: 'Ubuntu', 'Segoe UI', sans-serif;
+  }
+  header { padding: 28px 32px 10px; }
+  h1 {
+    font-size: 26px;
+    background: linear-gradient(90deg,#9db4ff,#c9a4ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header p { color: #8891bd; margin-top: 6px; font-size: 14px; }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
+    padding: 20px 32px 40px;
+  }
+  .card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(140,160,255,0.15);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .card .icon { font-size: 30px; }
+  .card h3 { font-size: 16px; color: #cdd6ff; }
+  .card p { font-size: 13px; color: #9aa3d1; flex-grow: 1; }
+  .card button {
+    background: linear-gradient(90deg,#5b6bd8,#8a5bd8);
+    color: white; border: none; padding: 9px 16px;
+    border-radius: 999px; font-size: 13px; cursor: pointer;
+  }
+  .card button.secondary {
+    background: transparent; border: 1px solid rgba(140,160,255,0.3); color: #b7bfe6;
+  }
+  .status { font-size: 12px; color: #7de3a0; min-height: 16px; }
+  .status.err { color: #ff8a8a; }
+  .row { display: flex; gap: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Linux-Universe Control Center</h1>
+  <p>Всё управление системой в одном месте</p>
+</header>
+<div id="grid">
+
+  <div class="card">
+    <div class="icon">🛰️</div>
+    <h3>Air-Gap режим</h3>
+    <p>Мгновенно отключить или включить все сетевые интерфейсы.</p>
+    <div class="row">
+      <button onclick="run('airgap_on', this)">Включить</button>
+      <button class="secondary" onclick="run('airgap_off', this)">Выключить</button>
+    </div>
+    <div class="status" id="s-airgap"></div>
+  </div>
+
+  <div class="card">
+    <div class="icon">🦠</div>
+    <h3>Антивирус</h3>
+    <p>Запустить проверку домашней папки на угрозы (ClamAV).</p>
+    <button onclick="run('scan', this)">Запустить сканирование</button>
+    <div class="status" id="s-scan"></div>
+  </div>
+
+  <div class="card">
+    <div class="icon">💻</div>
+    <h3>Dev-Box Workspace</h3>
+    <p>Открыть настройку окружений разработчика заново.</p>
+    <button onclick="run('devbox', this)">Открыть настройку</button>
+    <div class="status" id="s-devbox"></div>
+  </div>
+
+  <div class="card">
+    <div class="icon">🤖</div>
+    <h3>ИИ-помощник</h3>
+    <p>Локальный офлайн-ассистент.</p>
+    <button onclick="run('ai', this)">Запустить</button>
+    <div class="status" id="s-ai"></div>
+  </div>
+
+  <div class="card">
+    <div class="icon">🧱</div>
+    <h3>Firewall (UFW)</h3>
+    <p>Включить или отключить брандмауэр.</p>
+    <div class="row">
+      <button onclick="run('fw_on', this)">Включить</button>
+      <button class="secondary" onclick="run('fw_off', this)">Выключить</button>
+    </div>
+    <div class="status" id="s-fw"></div>
+  </div>
+
+  <div class="card">
+    <div class="icon">🕰️</div>
+    <h3>Резервные копии</h3>
+    <p>Открыть Timeshift для управления снапшотами.</p>
+    <button onclick="run('timeshift', this)">Открыть Timeshift</button>
+    <div class="status" id="s-timeshift"></div>
+  </div>
+
+  <div class="card">
+    <div class="icon">🔑</div>
+    <h3>Менеджер паролей</h3>
+    <p>Открыть KeePassXC.</p>
+    <button onclick="run('keepass', this)">Открыть KeePassXC</button>
+    <div class="status" id="s-keepass"></div>
+  </div>
+
+  <div class="card">
+    <div class="icon">📚</div>
+    <h3>Библиотека книг</h3>
+    <p>Открыть папку со встроенной книжной коллекцией.</p>
+    <button onclick="run('books', this)">Открыть папку</button>
+    <div class="status" id="s-books"></div>
+  </div>
+
+</div>
+<script>
+async function run(action, btn) {
+  const card = btn.closest('.card');
+  const statusEl = card.querySelector('.status');
+  statusEl.textContent = 'Выполняю...';
+  statusEl.className = 'status';
+  try {
+    const res = await fetch('/api/' + action);
+    const data = await res.json();
+    statusEl.textContent = data.ok ? 'Готово' : ('Ошибка: ' + data.error);
+    statusEl.className = 'status' + (data.ok ? '' : ' err');
+  } catch (e) {
+    statusEl.textContent = 'Ошибка связи';
+    statusEl.className = 'status err';
+  }
+}
+</script>
+</body>
+</html>
+"""
+
+ACTIONS = {
+    "airgap_on":  ["pkexec", "/usr/local/bin/linux-universe-airgap", "on"],
+    "airgap_off": ["pkexec", "/usr/local/bin/linux-universe-airgap", "off"],
+    "scan":       ["x-terminal-emulator", "-e", "/usr/local/bin/linux-universe-scan"],
+    "devbox":     ["bash", "-c", "rm -f \"$HOME/.config/linux-universe/devbox-setup-done\"; /usr/local/bin/linux-universe-devbox-setup"],
+    "ai":         ["x-terminal-emulator", "-e", "/usr/local/bin/linux-universe-ai"],
+    "fw_on":      ["pkexec", "ufw", "--force", "enable"],
+    "fw_off":     ["pkexec", "ufw", "disable"],
+    "timeshift":  ["pkexec", "timeshift-gtk"],
+    "keepass":    ["keepassxc"],
+    "books":      ["nautilus", "/usr/share/linux-universe/books"],
+}
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a):
+        pass
+
+    def do_GET(self):
+        if self.path == "/" or self.path == "/index.html":
+            body = INDEX_HTML.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        if self.path.startswith("/api/"):
+            action = self.path[len("/api/"):]
+            cmd = ACTIONS.get(action)
+            result = {"ok": False, "error": "unknown action"}
+            if cmd:
+                try:
+                    subprocess.Popen(cmd)
+                    result = {"ok": True}
+                except Exception as e:
+                    result = {"ok": False, "error": str(e)}
+            body = json.dumps(result).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        self.send_response(404)
+        self.end_headers()
+
+with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
+    httpd.serve_forever()
