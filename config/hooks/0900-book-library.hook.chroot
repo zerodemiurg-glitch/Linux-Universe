@@ -10,26 +10,40 @@ CATALOG_URL="https://www.gutenberg.org/cache/epub/feeds/pg_catalog.csv.gz"
 curl -fsSL "$CATALOG_URL" -o /tmp/pg_catalog.csv.gz || { echo "WARNING: catalog download failed"; exit 0; }
 gunzip -f /tmp/pg_catalog.csv.gz
 
-# Extract Gutenberg IDs for Russian-language books
-IDS=$(awk -F',' 'NR>1 && $6=="ru" {print $1}' /tmp/pg_catalog.csv)
-COUNT=0
-TOTAL_MAX_BYTES=$((60*1024*1024))
-CURRENT_BYTES=0
+python3 << 'PYEOF'
+import csv, urllib.request, os
 
-for ID in $IDS; do
-    URL="https://www.gutenberg.org/ebooks/${ID}.epub.noimages"
-    OUT="$LIB_DIR/${ID}.epub"
-    curl -fsSL "$URL" -o "$OUT" 2>/dev/null || continue
-    if [ -s "$OUT" ]; then
-        SIZE=$(stat -c%s "$OUT")
-        CURRENT_BYTES=$((CURRENT_BYTES + SIZE))
-        COUNT=$((COUNT + 1))
-    else
-        rm -f "$OUT"
-    fi
-    if [ "$CURRENT_BYTES" -ge "$TOTAL_MAX_BYTES" ]; then
-        break
-    fi
-done
+LIB_DIR = "/usr/share/linux-universe/books"
+MAX_BYTES = 60 * 1024 * 1024
+current_bytes = 0
+count = 0
 
-echo "Book library setup complete: $COUNT books, $(du -sh "$LIB_DIR" | cut -f1) total"
+with open("/tmp/pg_catalog.csv", newline='', encoding='utf-8', errors='ignore') as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+        if row.get("Language") != "ru":
+            continue
+        book_id = row.get("Text#")
+        if not book_id:
+            continue
+        url = f"https://www.gutenberg.org/ebooks/{book_id}.epub.noimages"
+        out_path = os.path.join(LIB_DIR, f"{book_id}.epub")
+        try:
+            urllib.request.urlretrieve(url, out_path)
+            size = os.path.getsize(out_path)
+            if size > 0:
+                current_bytes += size
+                count += 1
+            else:
+                os.remove(out_path)
+        except Exception:
+            if os.path.exists(out_path):
+                os.remove(out_path)
+            continue
+        if current_bytes >= MAX_BYTES:
+            break
+
+print(f"Downloaded {count} books, {current_bytes / (1024*1024):.1f} MB total")
+PYEOF
+
+echo "Book library setup complete"
