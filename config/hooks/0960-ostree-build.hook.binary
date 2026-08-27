@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+echo "Building OSTree repository from system..."
+
+OSTREE_REPO="chroot/usr/share/linux-universe/ostree-repo"
+mkdir -p "$OSTREE_REPO"
+
+ostree --repo="$OSTREE_REPO" init --mode=archive
+
+ostree --repo="$OSTREE_REPO" commit \
+    --branch=linux-universe/1.0/x86_64 \
+    --subject="Linux-Universe 1.0 base commit" \
+    --tree=dir=chroot \
+    --skip-if-unchanged
+
+echo "OSTree repository built:"
+ostree --repo="$OSTREE_REPO" log linux-universe/1.0/x86_64 | head -10
+du -sh "$OSTREE_REPO"
