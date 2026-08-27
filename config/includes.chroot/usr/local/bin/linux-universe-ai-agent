@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+"""Linux-Universe AI Agent: local model + isolated sandbox for coding tasks."""
+
+import subprocess, urllib.request, json, os, time, re, sys, shutil
+
+BIN_DIR = "/opt/linux-universe-ai/bin"
+MODEL = "/opt/linux-universe-ai/model.gguf"
+SERVER_URL = "http://127.0.0.1:8745"
+SANDBOX = "ai-agent-sandbox-box"
+IMG_TAR = "/usr/share/linux-universe/devbox-images/ai-agent-sandbox.tar"
+MAX_STEPS = 12
+CMD_TIMEOUT = 30
+
+SYSTEM_PROMPT = """Ты — офлайн ИИ-агент Linux-Universe, помогаешь писать, тестировать и отлаживать код
+в изолированной песочнице. На каждом шаге выбери РОВНО ОДНО действие и выведи ТОЛЬКО один блок:
+
+```run
+команда для песочницы
+```
+
+```write:относительный/путь/файла.py
+содержимое файла
+```
+
+```final
+итоговый ответ пользователю
+```
+
+Не пиши ничего вне этих блоков. Действуй пошагово: пиши файл, потом запускай, смотри вывод, при ошибке — исправляй."""
+
+def ensure_sandbox():
+    result = subprocess.run(["distrobox", "list"], capture_output=True, text=True)
+    if SANDBOX in result.stdout:
+        return True
+    if not os.path.exists(IMG_TAR):
+        print("Sandbox image not found, cannot start agent mode.")
+        return False
+    subprocess.run(["podman", "load", "-i", IMG_TAR], check=False)
+    subprocess.run(["distrobox", "create", "--name", SANDBOX, "--image", "local/dev-ai-agent-sandbox", "--yes"], check=False)
+    return True
+
+def find_llama_server():
+    found = shutil.which("llama-server")
+    if found:
+        return found
+    for root, _, files in os.walk(BIN_DIR):
+        for f in files:
+            if f == "llama-server":
+                return os.path.join(root, f)
+    return None
+
+def ensure_server():
+    try:
+        urllib.request.urlopen(SERVER_URL + "/health", timeout=2)
+        return True
+    except Exception:
+        pass
+    bin_path = find_llama_server()
+    if not bin_path or not os.path.exists(MODEL):
+        print("llama-server or model not found, cannot start agent mode.")
+        return False
+    subprocess.Popen([bin_path, "-m", MODEL, "--port", "8745", "-c", "8192"],
+                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    for _ in range(30):
+        try:
+            urllib.request.urlopen(SERVER_URL + "/health", timeout=2)
+            return True
+        except Exception:
+            time.sleep(1)
+    return False
+
+def chat(messages):
+    payload = json.dumps({"messages": messages, "temperature": 0.3}).encode()
+    req = urllib.request.Request(SERVER_URL + "/v1/chat/completions", data=payload,
+                                  headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        data = json.loads(r.read().decode())
+        return data["choices"][0]["message"]["content"]
+
+def run_in_sandbox(cmd):
+    try:
+        result = subprocess.run(
+            ["distrobox", "enter", SANDBOX, "--", "bash", "-c", cmd],
+            capture_output=True, text=True, timeout=CMD_TIMEOUT
+        )
+        return (result.stdout + result.stderr)[-3000:]
+    except subprocess.TimeoutExpired:
+        return "[Timeout: command exceeded 30 seconds]"
+
+def write_in_sandbox(path, content):
+    safe_path = path.lstrip("/")
+    cmd = f"mkdir -p \"$(dirname '{safe_path}')\" && cat > '{safe_path}' << 'LUEOF'\n{content}\nLUEOF"
+    return run_in_sandbox(cmd)
+
+def parse_action(text):
+    m = re.search(r"```run\n(.*?)```", text, re.DOTALL)
+    if m:
+        return ("run", m.group(1).strip())
+    m = re.search(r"```write:(\S+)\n(.*?)```", text, re.DOTALL)
+    if m:
+        return ("write", m.group(1).strip(), m.group(2))
+    m = re.search(r"```final\n(.*?)```", text, re.DOTALL)
+    if m:
+        return ("final", m.group(1).strip())
+    return ("final", text.strip())
+
+def main():
+    print("Linux-Universe AI Agent (offline coding sandbox)")
+    print("Готовлю окружение...")
+    if not ensure_sandbox():
+        sys.exit(1)
+    if not ensure_server():
+        print("Не удалось запустить локальную модель.")
+        sys.exit(1)
+
+    task = input("\nОпиши задачу для агента: ").strip()
+    if not task:
+        return
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": task},
+    ]
+
+    for step in range(MAX_STEPS):
+        print(f"\n--- Шаг {step+1}/{MAX_STEPS} ---")
+        reply = chat(messages)
+        action = parse_action(reply)
+
+        if action[0] == "final":
+            print("\nАгент завершил работу:\n")
+            print(action[1])
+            return
+
+        if action[0] == "run":
+            print(f"Выполняю: {action[1]}")
+            output = run_in_sandbox(action[1])
+            print(output)
+            messages.append({"role": "assistant", "content": reply})
+            messages.append({"role": "user", "content": f"Вывод:\n{output}"})
+
+        elif action[0] == "write":
+            _, path, content = action
+            print(f"Записываю файл: {path}")
+            output = write_in_sandbox(path, content)
+            messages.append({"role": "assistant", "content": reply})
+            messages.append({"role": "user", "content": f"Файл записан. Вывод:\n{output}"})
+
+    print("\nДостигнут лимит шагов агента. Задача не завершена полностью.")
+
+if __name__ == "__main__":
+    main()

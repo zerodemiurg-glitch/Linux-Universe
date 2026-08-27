@@ -30,6 +30,7 @@ build_image "go"     "golang-go"
 build_image "rust"   "rustc cargo"
 build_image "java"   "default-jdk"
 build_image "cpp"    "build-essential gdb"
+build_image "ai-agent-sandbox" "python3 python3-pip build-essential gdb git curl nano"
 
 rm -rf "$WORKDIR"
 

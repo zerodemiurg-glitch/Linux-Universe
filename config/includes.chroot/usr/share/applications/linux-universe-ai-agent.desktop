@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Linux-Universe AI Agent (Code Sandbox)
+Comment=Offline AI coding agent in isolated sandbox
+Exec=x-terminal-emulator -e /usr/local/bin/linux-universe-ai-agent
+Icon=applications-development
+Terminal=false
+Categories=Development;
