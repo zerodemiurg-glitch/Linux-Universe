@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+BRAND_DIR="/etc/calamares/branding/linux-universe"
+mkdir -p "$BRAND_DIR"
+
+curl -fsSL "https://www.nasa.gov/wp-content/uploads/2023/03/blackholefirst.png" -o "$BRAND_DIR/logo.png" || true
+
+if [ ! -s "$BRAND_DIR/logo.png" ]; then
+    python3 -c "
+from PIL import Image
+img = Image.new('RGB', (200,200), color=(13,17,40))
+img.save('$BRAND_DIR/logo.png')
+" 2>/dev/null || touch "$BRAND_DIR/logo.png"
+fi
+
+cp "$BRAND_DIR/logo.png" "$BRAND_DIR/welcome.png" 2>/dev/null || true
+echo "Calamares branding ready: $(du -h "$BRAND_DIR/logo.png" 2>/dev/null | cut -f1)"
