@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Установить Linux-Universe
+Comment=Install Linux-Universe to disk
+Exec=pkexec calamares
+Icon=calamares
+Terminal=false
+Categories=System;

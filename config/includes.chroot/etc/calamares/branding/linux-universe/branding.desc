@@ -1,0 +1,29 @@
+componentName: linux-universe
+
+welcomeStyleCalamares: true
+welcomeExpandingLogo: true
+
+strings:
+    productName:         "Linux-Universe"
+    shortProductName:    "Linux-Universe"
+    version:              "1.0"
+    shortVersion:         "1.0"
+    versionedName:        "Linux-Universe 1.0"
+    shortVersionedName:   "Linux-Universe 1.0"
+    bootloaderEntryName:  "Linux-Universe"
+    productUrl:            "https://github.com/zerodemiurg-glitch/Linux-Universe"
+    supportUrl:            "https://github.com/zerodemiurg-glitch/Linux-Universe/issues"
+    releaseNotesUrl:       "https://github.com/zerodemiurg-glitch/Linux-Universe"
+
+images:
+    productLogo:         "logo.png"
+    productIcon:          "logo.png"
+    productWelcome:       "welcome.png"
+
+slideshow: "show.qml"
+
+style:
+   sidebarBackground:    "#0d1128"
+   sidebarText:           "#e8ecff"
+   sidebarTextSelect:     "#9db4ff"
+   sidebarTextHighlight:  "#050611"

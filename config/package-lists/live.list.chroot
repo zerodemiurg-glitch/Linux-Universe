@@ -40,3 +40,7 @@ cargo
 default-jdk
 nodejs
 npm
+calamares
+btrfs-progs
+squashfs-tools
+gparted
