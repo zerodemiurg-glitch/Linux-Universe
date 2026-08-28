@@ -34,4 +34,7 @@ build_image "ai-agent-sandbox" "python3 python3-pip build-essential gdb git curl
 
 rm -rf "$WORKDIR"
 
+echo "Cleaning up podman build cache to free disk space..."
+podman system prune -af --volumes 2>&1 || true
+
 echo "Dev-Box offline images setup complete: $(ls -la "$IMG_DIR" | wc -l) files"

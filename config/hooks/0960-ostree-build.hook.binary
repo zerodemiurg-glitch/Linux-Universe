@@ -20,6 +20,8 @@ rsync -a chroot/ "$TMP_TREE/" \
 
 ostree --repo="$TMP_REPO" init --mode=archive
 
+ostree --repo="$TMP_REPO" config set core.min-free-space-percent 0
+
 ostree --repo="$TMP_REPO" commit \
     --branch=linux-universe/1.0/x86_64 \
     --subject="Linux-Universe 1.0 base commit" \
