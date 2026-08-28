@@ -1,14 +1,19 @@
 #!/bin/bash
 set -e
 
-echo "Building OSTree repository from system (excluding heavy blobs)..."
+echo "Building OSTree repository from system (excluding heavy blobs and pseudo-fs)..."
 
 TMP_TREE=$(mktemp -d)
 TMP_REPO=$(mktemp -d)
 DEST_DIR="chroot/usr/share/linux-universe/ostree-repo"
 
-echo "Copying filtered tree (excluding AI model and devbox images)..."
+echo "Copying filtered tree..."
 rsync -a chroot/ "$TMP_TREE/" \
+    --exclude="proc/*" \
+    --exclude="sys/*" \
+    --exclude="dev/*" \
+    --exclude="run/*" \
+    --exclude="tmp/*" \
     --exclude="usr/share/linux-universe/devbox-images/" \
     --exclude="opt/linux-universe-ai/model.gguf" \
     --exclude="usr/share/linux-universe/ostree-repo/"
