@@ -24,4 +24,13 @@ ostree --repo="$ROOT_MOUNT/ostree/repo" pull-local "$SRC_REPO" "$BRANCH"
 echo "Deploying commit..."
 ostree admin deploy --sysroot="$ROOT_MOUNT" --os="$OS_NAME" "$BRANCH"
 
+echo "Installing GRUB bootloader for OSTree..."
+EFI_MOUNT="$ROOT_MOUNT/boot/efi"
+
+grub-install --target=x86_64-efi --efi-directory="$EFI_MOUNT" \
+    --boot-directory="$ROOT_MOUNT/boot" --bootloader-id=linux-universe \
+    --root-directory="$ROOT_MOUNT" || echo "WARNING: grub-install reported an issue"
+
+ostree admin instutil grub2-generate --sysroot="$ROOT_MOUNT" || echo "WARNING: grub2-generate reported an issue"
+
 echo "OSTree deployment complete."
