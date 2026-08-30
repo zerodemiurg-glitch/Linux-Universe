@@ -44,3 +44,6 @@ calamares
 btrfs-progs
 squashfs-tools
 gparted
+zram-tools
+unattended-upgrades
+apt-listchanges
