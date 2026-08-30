@@ -28,7 +28,7 @@ fi
 
 if [ -n "$LATEST_URL" ]; then
     echo "Found llama.cpp asset: $LATEST_URL"
-    curl -fsSL "$LATEST_URL" -o llamacpp.tar.gz
+    curl -fL --retry 5 --retry-delay 5 --retry-connrefused "$LATEST_URL" -o llamacpp.tar.gz
     mkdir -p /opt/linux-universe-ai/bin
     tar -xzf llamacpp.tar.gz -C /opt/linux-universe-ai/bin
     rm llamacpp.tar.gz
@@ -39,7 +39,7 @@ fi
 
 # Download quantized Qwen3-8B model (~5GB, Q4_K_M) from official Qwen repo
 echo "Downloading Qwen3-8B model (this is large, please wait)..."
-curl -fsSL -o model.gguf \
+curl -fL --retry 5 --retry-delay 5 --retry-connrefused -o model.gguf \
     "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
 
 if [ -s model.gguf ]; then
