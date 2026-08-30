@@ -47,3 +47,7 @@ gparted
 zram-tools
 unattended-upgrades
 apt-listchanges
+epiphany-browser
+apparmor
+apparmor-profiles
+apparmor-utils

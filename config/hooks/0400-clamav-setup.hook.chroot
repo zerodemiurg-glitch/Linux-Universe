@@ -6,5 +6,11 @@ systemctl enable clamav-daemon.service
 
 echo "ClamAV services enabled (freshclam + daemon)"
 
+ufw default deny incoming
+ufw default allow outgoing
 ufw --force enable
 echo "UFW firewall enabled by default"
+
+systemctl enable apparmor
+aa-enforce /etc/apparmor.d/* 2>/dev/null || true
+echo "AppArmor enabled with enforce mode on available profiles"

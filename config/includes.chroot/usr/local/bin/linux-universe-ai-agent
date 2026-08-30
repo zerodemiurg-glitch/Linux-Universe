@@ -124,7 +124,16 @@ def main():
 
     for step in range(MAX_STEPS):
         print(f"\n--- Шаг {step+1}/{MAX_STEPS} ---")
-        reply = chat(messages)
+        try:
+            reply = chat(messages)
+        except Exception as e:
+            print(f"\nОшибка связи с локальной моделью: {e}")
+            print("Возможно, модель перегружена или зависла. Попробуй запустить агента заново.")
+            return
+
+        if not reply or not reply.strip():
+            print("\nМодель вернула пустой ответ. Прерываю выполнение.")
+            return
         action = parse_action(reply)
 
         if action[0] == "final":
