@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if grep -qE "boot=live|casper" /proc/cmdline 2>/dev/null || [ -d /run/live ]; then
+    exit 0
+fi
+
 MARKER="$HOME/.config/linux-universe/welcome-shown"
 mkdir -p "$(dirname "$MARKER")"
 

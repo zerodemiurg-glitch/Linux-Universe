@@ -101,6 +101,14 @@ INDEX_HTML = """<!DOCTYPE html>
   </div>
 
   <div class="card">
+    <div class="icon">🧑‍💻</div>
+    <h3>ИИ-агент (песочница)</h3>
+    <p>Автономный агент для написания и отладки кода в изолированной среде.</p>
+    <button onclick="run('agent', this)">Запустить</button>
+    <div class="status" id="s-agent"></div>
+  </div>
+
+  <div class="card">
     <div class="icon">🧱</div>
     <h3>Firewall (UFW)</h3>
     <p>Включить или отключить брандмауэр.</p>
@@ -163,6 +171,7 @@ ACTIONS = {
     "scan":       ["x-terminal-emulator", "-e", "/usr/local/bin/linux-universe-scan"],
     "devbox":     ["x-terminal-emulator", "-e", "bash", "-c", "rm -f \"$HOME/.config/linux-universe/devbox-setup-done\"; /usr/local/bin/linux-universe-devbox-setup"],
     "ai":         ["x-terminal-emulator", "-e", "/usr/local/bin/linux-universe-ai"],
+    "agent":      ["x-terminal-emulator", "-e", "/usr/local/bin/linux-universe-ai-agent"],
     "fw_on":      ["pkexec", "ufw", "--force", "enable"],
     "fw_off":     ["pkexec", "ufw", "disable"],
     "timeshift":  ["pkexec", "timeshift-gtk"],
