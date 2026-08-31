@@ -2,6 +2,20 @@
 # Linux-Universe: quick ClamAV scan of home directory
 
 echo "=== Linux-Universe Antivirus Scan ==="
+
+DB_DATE=$(find /var/lib/clamav -name "*.cvd" -o -name "*.cld" 2>/dev/null | xargs -r stat -c %Y 2>/dev/null | sort -n | tail -1)
+NOW=$(date +%s)
+
+if [ -z "$DB_DATE" ]; then
+    echo "⚠ ВНИМАНИЕ: база данных вирусов ещё не загружена."
+    echo "Проверка будет неточной. Дождись обновления (freshclam) и попробуй снова."
+    echo ""
+elif [ $((NOW - DB_DATE)) -gt 1209600 ]; then
+    echo "⚠ ВНИМАНИЕ: база данных вирусов не обновлялась более 14 дней."
+    echo "Результат может быть неактуальным."
+    echo ""
+fi
+
 echo "Scanning $HOME ..."
 echo ""
 

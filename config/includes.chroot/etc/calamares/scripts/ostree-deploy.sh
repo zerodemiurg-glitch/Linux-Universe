@@ -18,7 +18,7 @@ ostree admin init-fs --sysroot="$ROOT_MOUNT" --modern "$ROOT_MOUNT"
 ostree admin os-init "$OS_NAME" --sysroot="$ROOT_MOUNT"
 
 echo "Setting up local repo alias and pulling commit..."
-ostree --repo="$ROOT_MOUNT/ostree/repo" remote add --no-gpg-verify linux-universe-local "file://$SRC_REPO"
+ostree --repo="$ROOT_MOUNT/ostree/repo" remote add --no-gpg-verify --if-not-exists linux-universe-local "file://$SRC_REPO"
 ostree --repo="$ROOT_MOUNT/ostree/repo" pull-local "$SRC_REPO" "$BRANCH"
 
 echo "Deploying commit..."

@@ -161,7 +161,7 @@ ACTIONS = {
     "airgap_on":  ["pkexec", "/usr/local/bin/linux-universe-airgap", "on"],
     "airgap_off": ["pkexec", "/usr/local/bin/linux-universe-airgap", "off"],
     "scan":       ["x-terminal-emulator", "-e", "/usr/local/bin/linux-universe-scan"],
-    "devbox":     ["bash", "-c", "rm -f \"$HOME/.config/linux-universe/devbox-setup-done\"; /usr/local/bin/linux-universe-devbox-setup"],
+    "devbox":     ["x-terminal-emulator", "-e", "bash", "-c", "rm -f \"$HOME/.config/linux-universe/devbox-setup-done\"; /usr/local/bin/linux-universe-devbox-setup"],
     "ai":         ["x-terminal-emulator", "-e", "/usr/local/bin/linux-universe-ai"],
     "fw_on":      ["pkexec", "ufw", "--force", "enable"],
     "fw_off":     ["pkexec", "ufw", "disable"],
