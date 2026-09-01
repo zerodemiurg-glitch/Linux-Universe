@@ -42,3 +42,20 @@ jobs:
           name: linux-universe-iso
           path: '*.iso'
           if-no-files-found: error
+
+      - name: Upload ISO to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: success()
+        with:
+          tag_name: iso-${{ github.run_number }}
+          name: Linux-Universe ISO #${{ github.run_number }}
+          body: |
+            Автоматически собранный ISO
+            - Commit: ${{ github.sha }}
+            - Workflow run: \( {{ github.server_url }}/ \){{ github.repository }}/actions/runs/${{ github.run_id }}
+          files: |
+            *.iso
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
