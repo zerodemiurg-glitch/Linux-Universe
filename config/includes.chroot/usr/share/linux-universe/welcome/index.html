@@ -163,7 +163,7 @@
   }
   function next() { if (i < total - 1) { i++; render(); } }
   function closeApp() {
-    fetch('http://127.0.0.1:8743/done').catch(()=>{});
+    fetch('/done').catch(()=>{});
     setTimeout(()=>{ try{window.close();}catch(e){} }, 300);
   }
   document.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') next(); });

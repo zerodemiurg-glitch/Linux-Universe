@@ -8,23 +8,10 @@ MARKER="$HOME/.config/linux-universe/welcome-shown"
 mkdir -p "$(dirname "$MARKER")"
 
 if [ ! -f "$MARKER" ]; then
-    python3 -c "
-import http.server, socketserver
-class H(http.server.BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        raise KeyboardInterrupt
-    def log_message(self, *a): pass
-with socketserver.TCPServer(('127.0.0.1', 8743), H) as httpd:
-    try:
-        httpd.handle_request()
-    except KeyboardInterrupt:
-        pass
-" &
+    /usr/local/bin/linux-universe-welcome-server &
     SERVER_PID=$!
 
-    epiphany --application-mode --profile="$HOME/.cache/lu-welcome-profile" "file:///usr/share/linux-universe/welcome/index.html" &
+    epiphany --application-mode --profile="$HOME/.cache/lu-welcome-profile" "http://127.0.0.1:8743/" &
     EPIPH_PID=$!
 
     wait $SERVER_PID
