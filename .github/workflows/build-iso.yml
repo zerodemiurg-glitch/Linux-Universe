@@ -45,6 +45,12 @@ jobs:
           path: '*.iso'
           if-no-files-found: error
 
+      - name: Split ISO into <2GB parts
+        if: success()
+        run: |
+          split -b 1900M -d --additional-suffix=.part *.iso linux-universe-iso.
+          ls -la linux-universe-iso.*
+
       - name: Upload ISO to GitHub Release
         uses: softprops/action-gh-release@v2
         if: success()
@@ -52,11 +58,22 @@ jobs:
           tag_name: iso-${{ github.run_number }}
           name: Linux-Universe ISO #${{ github.run_number }}
           body: |
-            Автоматически собранный ISO
+            Автоматически собранный ISO, разбит на части (каждая < 2GB, лимит GitHub).
+
+            Скачай ВСЕ файлы вида linux-universe-iso.*.part, затем склей их обратно:
+
+            Linux/macOS:
+            cat linux-universe-iso.*.part > linux-universe.iso
+
+            Windows (PowerShell):
+            cmd /c copy /b linux-universe-iso.00.part+linux-universe-iso.01.part+linux-universe-iso.02.part+linux-universe-iso.03.part+linux-universe-iso.04.part+linux-universe-iso.05.part linux-universe.iso
+
+            (проверь фактическое количество частей в списке файлов ниже и подставь все имена по порядку)
+
             - Commit: ${{ github.sha }}
-            - Workflow run: \( {{ github.server_url }}/ \){{ github.repository }}/actions/runs/${{ github.run_id }}
+            - Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           files: |
-            *.iso
+            linux-universe-iso.*.part
           draft: false
           prerelease: false
         env:
