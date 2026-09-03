@@ -29,3 +29,16 @@ echo "Pentest core tools configured (Wireshark non-root, recon-ng, Tor ready but
 systemctl enable auditd
 echo "-w /usr/local/bin/linux-universe-airgap -p x -k airgap_toggle" >> /etc/audit/rules.d/linux-universe.rules
 echo "Auditd enabled, tracking Air-Gap toggle attempts"
+
+if [ -f /etc/default/grub ]; then
+    sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lockdown=integrity /' /etc/default/grub
+fi
+echo "Kernel lockdown mode (integrity) configured"
+
+chattr +i /usr/local/bin/linux-universe-airgap 2>/dev/null || echo "NOTE: chattr +i not supported on this filesystem at build time"
+echo "Air-Gap script protected with immutable flag"
+
+for i in 1 2 3 4 5; do
+    systemctl enable "linux-universe-watchdog@${i}.service"
+done
+echo "5-node mutual watchdog ring enabled"

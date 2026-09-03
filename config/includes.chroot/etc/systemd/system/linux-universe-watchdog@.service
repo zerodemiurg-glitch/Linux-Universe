@@ -1,0 +1,12 @@
+[Unit]
+Description=Linux-Universe Mutual Watchdog Node %i
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/linux-universe-watchdog.sh %i
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
