@@ -25,3 +25,7 @@ pip3 install --break-system-packages recon-ng 2>&1 || echo "WARNING: recon-ng in
 
 systemctl disable tor 2>/dev/null || true
 echo "Pentest core tools configured (Wireshark non-root, recon-ng, Tor ready but off by default)"
+
+systemctl enable auditd
+echo "-w /usr/local/bin/linux-universe-airgap -p x -k airgap_toggle" >> /etc/audit/rules.d/linux-universe.rules
+echo "Auditd enabled, tracking Air-Gap toggle attempts"
