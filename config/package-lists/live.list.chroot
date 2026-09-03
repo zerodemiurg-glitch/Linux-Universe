@@ -51,3 +51,16 @@ epiphany-browser
 apparmor
 apparmor-profiles
 apparmor-utils
+nmap
+wireshark
+sqlmap
+hydra
+john
+hashcat
+gobuster
+nikto
+dirb
+whatweb
+tor
+torsocks
+python3-pip

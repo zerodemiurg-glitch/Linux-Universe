@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Tor: Enable
+Comment=Route traffic through Tor
+Exec=pkexec /usr/local/bin/linux-universe-tor-toggle on
+Icon=security-high
+Terminal=false
+Categories=Network;Security;

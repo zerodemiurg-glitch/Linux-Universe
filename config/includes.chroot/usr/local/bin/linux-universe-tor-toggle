@@ -1,0 +1,22 @@
+#!/bin/bash
+# Linux-Universe: Tor routing toggle
+
+STATE_FILE="/var/lib/linux-universe/tor-state"
+mkdir -p /var/lib/linux-universe
+
+if [ "$1" = "on" ]; then
+    systemctl start tor
+    echo "on" > "$STATE_FILE"
+    notify-send "Linux-Universe" "Tor включён. Используй torsocks <команда> для маршрутизации через Tor." -i security-high 2>/dev/null
+    echo "Tor: ON"
+elif [ "$1" = "off" ]; then
+    systemctl stop tor
+    echo "off" > "$STATE_FILE"
+    notify-send "Linux-Universe" "Tor выключен." -i network-idle 2>/dev/null
+    echo "Tor: OFF"
+elif [ "$1" = "status" ]; then
+    systemctl is-active tor 2>/dev/null || echo "inactive"
+else
+    echo "Usage: linux-universe-tor-toggle [on|off|status]"
+    exit 1
+fi

@@ -14,3 +14,14 @@ echo "UFW firewall enabled by default"
 systemctl enable apparmor
 aa-enforce /etc/apparmor.d/* 2>/dev/null || true
 echo "AppArmor enabled with enforce mode on available profiles"
+
+groupadd -f wireshark
+usermod -aG wireshark $(getent passwd 1000 | cut -d: -f1) 2>/dev/null || true
+chgrp wireshark /usr/bin/dumpcap 2>/dev/null || true
+chmod 750 /usr/bin/dumpcap 2>/dev/null || true
+setcap cap_net_raw,cap_net_admin+eip /usr/bin/dumpcap 2>/dev/null || true
+
+pip3 install --break-system-packages recon-ng 2>&1 || echo "WARNING: recon-ng install failed"
+
+systemctl disable tor 2>/dev/null || true
+echo "Pentest core tools configured (Wireshark non-root, recon-ng, Tor ready but off by default)"
