@@ -11,9 +11,17 @@ ufw default allow outgoing
 ufw --force enable
 echo "UFW firewall enabled by default"
 
-selinux-activate
-sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
-echo "SELinux targeted policy set to enforcing"
+mkdir -p /etc/selinux
+if [ ! -f /etc/selinux/config ]; then
+    cat > /etc/selinux/config << 'SELEOF'
+SELINUX=enforcing
+SELINUXTYPE=default
+SELEOF
+else
+    sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+fi
+touch /.autorelabel
+echo "SELinux targeted policy set to enforcing (relabel deferred to first real boot)"
 
 groupadd -f wireshark
 usermod -aG wireshark $(getent passwd 1000 | cut -d: -f1) 2>/dev/null || true
