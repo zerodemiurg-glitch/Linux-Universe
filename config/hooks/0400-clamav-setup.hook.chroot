@@ -31,9 +31,9 @@ echo "-w /usr/local/bin/linux-universe-airgap -p x -k airgap_toggle" >> /etc/aud
 echo "Auditd enabled, tracking Air-Gap toggle attempts"
 
 if [ -f /etc/default/grub ]; then
-    sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lockdown=integrity /' /etc/default/grub
+    sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lockdown=confidentiality /' /etc/default/grub
 fi
-echo "Kernel lockdown mode (integrity) configured"
+echo "Kernel lockdown mode (confidentiality) configured"
 
 chattr +i /usr/local/bin/linux-universe-airgap 2>/dev/null || echo "NOTE: chattr +i not supported on this filesystem at build time"
 echo "Air-Gap script protected with immutable flag"
@@ -42,3 +42,22 @@ for i in 1 2 3 4 5; do
     systemctl enable "linux-universe-watchdog@${i}.service"
 done
 echo "5-node mutual watchdog ring enabled"
+
+echo "auth required pam_google_authenticator.so nullok" >> /etc/pam.d/sudo
+systemctl enable fail2ban
+echo "2FA-ready sudo (nullok until user enrolls), fail2ban enabled"
+
+cat > /etc/fail2ban/jail.local << 'FAILEOF'
+[DEFAULT]
+bantime = 3600
+findtime = 600
+maxretry = 5
+FAILEOF
+
+cat >> /etc/ufw/before.rules << 'NFEOF'
+
+# Linux-Universe: SYN flood rate limiting
+-A ufw-before-input -p tcp --syn -m limit --limit 25/s --limit-burst 50 -j ACCEPT
+-A ufw-before-input -p tcp --syn -j DROP
+NFEOF
+echo "fail2ban jail + SYN rate-limiting configured"

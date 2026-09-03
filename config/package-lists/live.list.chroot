@@ -68,3 +68,7 @@ network-manager-openvpn-gnome
 wireguard-tools
 resolvconf
 auditd
+libpam-google-authenticator
+libpam-u2f
+fail2ban
+nftables
