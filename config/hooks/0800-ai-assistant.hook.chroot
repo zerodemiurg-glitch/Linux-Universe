@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+echo "Installing hardened_malloc..."
+apt-get install -y --no-install-recommends build-essential git
+git clone --depth=1 https://github.com/GrapheneOS/hardened_malloc.git /tmp/hardened_malloc
+cd /tmp/hardened_malloc && make -j"$(nproc)" && cp out/libhardened_malloc.so /usr/lib/x86_64-linux-gnu/
+echo "/usr/lib/x86_64-linux-gnu/libhardened_malloc.so" > /etc/ld.so.preload
+cd / && rm -rf /tmp/hardened_malloc
+echo "hardened_malloc installed and preloaded system-wide"
+
 echo "Setting up Linux-Universe AI Assistant (llama.cpp + Qwen3-8B)..."
 
 mkdir -p /opt/linux-universe-ai

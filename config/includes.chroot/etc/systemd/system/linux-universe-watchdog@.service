@@ -7,6 +7,13 @@ Type=simple
 ExecStart=/usr/local/bin/linux-universe-watchdog.sh %i
 Restart=always
 RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/linux-universe
+ProtectKernelModules=false
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_SYS_MODULE
 
 [Install]
 WantedBy=multi-user.target

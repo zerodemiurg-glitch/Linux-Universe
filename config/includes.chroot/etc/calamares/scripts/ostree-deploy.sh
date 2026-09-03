@@ -22,7 +22,7 @@ ostree --repo="$ROOT_MOUNT/ostree/repo" remote add --no-gpg-verify --if-not-exis
 ostree --repo="$ROOT_MOUNT/ostree/repo" pull-local "$SRC_REPO" "$BRANCH"
 
 echo "Deploying commit..."
-ostree admin deploy --sysroot="$ROOT_MOUNT" --os="$OS_NAME" --karg="lockdown=confidentiality" "$BRANCH"
+ostree admin deploy --sysroot="$ROOT_MOUNT" --os="$OS_NAME" --karg="security=selinux selinux=1 enforcing=1 lockdown=confidentiality" "$BRANCH"
 
 echo "Installing GRUB bootloader for OSTree..."
 EFI_MOUNT="$ROOT_MOUNT/boot/efi"

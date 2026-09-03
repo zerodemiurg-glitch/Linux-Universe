@@ -11,9 +11,9 @@ ufw default allow outgoing
 ufw --force enable
 echo "UFW firewall enabled by default"
 
-systemctl enable apparmor
-aa-enforce /etc/apparmor.d/* 2>/dev/null || true
-echo "AppArmor enabled with enforce mode on available profiles"
+selinux-activate
+sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+echo "SELinux targeted policy set to enforcing"
 
 groupadd -f wireshark
 usermod -aG wireshark $(getent passwd 1000 | cut -d: -f1) 2>/dev/null || true
@@ -31,7 +31,7 @@ echo "-w /usr/local/bin/linux-universe-airgap -p x -k airgap_toggle" >> /etc/aud
 echo "Auditd enabled, tracking Air-Gap toggle attempts"
 
 if [ -f /etc/default/grub ]; then
-    sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lockdown=confidentiality /' /etc/default/grub
+    sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="security=selinux selinux=1 enforcing=1 lockdown=confidentiality /' /etc/default/grub
 fi
 echo "Kernel lockdown mode (confidentiality) configured"
 

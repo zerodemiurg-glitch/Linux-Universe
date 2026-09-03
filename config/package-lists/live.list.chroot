@@ -48,9 +48,6 @@ zram-tools
 unattended-upgrades
 apt-listchanges
 epiphany-browser
-apparmor
-apparmor-profiles
-apparmor-utils
 nmap
 wireshark
 sqlmap
@@ -72,3 +69,7 @@ libpam-google-authenticator
 libpam-u2f
 fail2ban
 nftables
+selinux-basics
+selinux-policy-default
+policycoreutils
+setools
